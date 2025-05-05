@@ -325,6 +325,13 @@ config LORA_BASICS_MODEM_DISABLE_JOIN_DUTY_CYCLE
 	 between gateway and device) for faster joins.
 	 You should keep this disabled to follow the LoRaWAN standard.
 
+config LORA_BASIC_MODEM_STORE_JOIN_SESSION
+	bool "Store join session parameters and keep session after reboot"
+	depends on LORA_BASICS_MODEM_CRYPTOGRAPHY_LR11XX || LORA_BASICS_MODEM_CRYPTOGRAPHY_LR11XX_WITH_CREDENTIALS
+	default n
+	help
+	 Store the join session in flash. This is useful if you want to keep the join
+	 session after a power cycle. This is not recommended for production devices.
 
 # FIXME: is it useful?
 config LORA_BASICS_MODEM_CONTEXT_BUFFER_SIZE

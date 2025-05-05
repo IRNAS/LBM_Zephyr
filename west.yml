@@ -10,8 +10,8 @@ manifest:
 
     - name: lora_basics_modem
       path: modules/lib/lora_basics_modem
-      url: https://github.com/lora-net/SWL2001
-      revision: v4.8.0
+      url: https://github.com/IRNAS/SWL2001
+      revision: v0.1.0
 
   self:
     path: application
