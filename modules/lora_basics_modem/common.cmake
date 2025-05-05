@@ -373,6 +373,10 @@ if (CONFIG_LORA_BASICS_MODEM_DISABLE_JOIN_DUTY_CYCLE)
     and device), and should absolutely not be enabled when emitting in open air.")
 endif()
 
+zephyr_compile_definitions_ifdef(CONFIG_LORA_BASIC_MODEM_STORE_JOIN_SESSION
+   STORE_JOIN_SESSION
+)
+
 #-----------------------------------------------------------------------------
 # Logging
 #-----------------------------------------------------------------------------
