@@ -15,6 +15,8 @@ zephyr_library_sources(
   ${LBM_LR11XX_DIR}/lr11xx_regmem.c
   ${LBM_LR11XX_DIR}/lr11xx_system.c
   ${LBM_LR11XX_DIR}/lr11xx_lr_fhss.c
+  ${LBM_LR11XX_DIR}/lr11xx_radio_timings.c
+  ${LBM_LR11XX_DIR}/lr11xx_rttof.c
 )
 
 # LR1121 is the only one not supporting GNSS and WiFi
