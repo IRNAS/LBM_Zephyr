@@ -14,7 +14,7 @@ zephyr_library()
 if(CONFIG_SEMTECH_LR11XX)
   # Library flag that disables some warnings
   zephyr_library_compile_definitions(LR11XX_DISABLE_WARNINGS)
-
+  zephyr_include_directories(lr11xx)
   zephyr_library_sources(lr11xx/lr11xx_board.c lr11xx/lr11xx_hal.c)
 
   zephyr_library_sources_ifdef(CONFIG_LORA_BASICS_MODEM_DRIVERS_RAL_RALF
