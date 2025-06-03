@@ -155,6 +155,17 @@ void smtc_modem_hal_init(const struct device *transceiver);
  */
 void smtc_modem_hal_register_callbacks(struct smtc_modem_hal_cb *hal_cb);
 
+#ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
+/**
+ * @brief Register a user callback for the radio irq.
+ * 
+ * Callback will be called when radio irq is triggered in addition to the default smtc_modem 
+ * callbacks. smtc_modem_hal_disable_modem_irq has no effect on calling this callback.
+ * 
+ * @param[in] user_irq_callback 
+ */
+void smtc_modem_hal_register_user_irq_callback(void (*user_irq_callback)(void *context));
+#endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
 
 /**
  * @brief Re-initialization of the hal radio irq radio callbacks.

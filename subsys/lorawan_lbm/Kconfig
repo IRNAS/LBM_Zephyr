@@ -374,4 +374,11 @@ config LORA_BASICS_MODEM_MAIN_THREAD_MAX_SLEEP_MS
 
 endif # LORA_BASICS_MODEM_MAIN_THREAD
 
+config LORA_BASICS_MODEM_USER_IRQ_CB
+	bool "Enable additional user defined irq cb."
+	default n
+	help
+	 Enable this if you want to use the user defined irq callback in addition to existing ones.
+	 User defined callback will be triggered regardless of the smtc cb enable/disable cb state.
+
 endif # LORA_BASICS_MODEM
