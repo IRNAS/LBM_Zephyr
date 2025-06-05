@@ -54,6 +54,9 @@ K_TIMER_DEFINE(prv_smtc_modem_hal_timer, prv_smtc_modem_hal_timer_handler, NULL)
 /* context and callback for the event pin interrupt */
 static void *prv_smtc_modem_hal_radio_irq_context;
 static void (*prv_smtc_modem_hal_radio_irq_callback)(void *context);
+#ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
+static void (*prv_user_irq_callback)(void *context);
+#endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
 
 /* ------------ Initialization ------------
  *
@@ -494,6 +497,12 @@ uint32_t smtc_modem_hal_get_random_nb_in_range(const uint32_t val_1, const uint3
  */
 void prv_transceiver_event_cb(const struct device *dev)
 {
+#ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
+	/* Call user-define cb first, even if disabled by the smtc modem */
+	if(prv_user_irq_callback) {
+		prv_user_irq_callback(prv_smtc_modem_hal_radio_irq_context);
+	}
+#endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
 	if (prv_modem_irq_enabled) {
 		/* Due to the way the transceiver driver is implemented, this is called from the system workq. */
 		prv_smtc_modem_hal_radio_irq_callback(prv_smtc_modem_hal_radio_irq_context);
@@ -512,6 +521,14 @@ void smtc_modem_hal_irq_config_radio_irq(void (*callback)(void *context), void *
 	lora_transceiver_board_attach_interrupt(prv_transceiver_dev, prv_transceiver_event_cb);
 	lora_transceiver_board_enable_interrupt(prv_transceiver_dev);
 }
+
+#ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
+void smtc_modem_hal_register_user_irq_callback(void (*user_irq_callback)(void *context))
+{
+	/* save user callback function */
+	prv_user_irq_callback = user_irq_callback;
+}
+#endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
 
 void smtc_modem_hal_irq_reset_radio_irq(void)
 {
