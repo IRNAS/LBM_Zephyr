@@ -48,6 +48,10 @@ static void lr11xx_board_event_callback(const struct device *dev, struct gpio_ca
 		k_sem_give(&data->gpio_sem);
 #elif CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_GLOBAL_THREAD
 		k_work_submit(&data->work);
+#elif CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_DIRECT
+		if (data->event_interrupt_cb) {
+			data->event_interrupt_cb(data->lr11xx_dev);
+		}
 #endif
 	} else {
 		gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_EDGE_TO_ACTIVE);
