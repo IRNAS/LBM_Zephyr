@@ -309,7 +309,7 @@ static int sx126x_pm_action(const struct device *dev, enum pm_device_action acti
 		.capa_xtb = DT_PROP_OR(node_id, xtal_capacitor_value_xtb, 0xFF),      \
 		.reg_mode = DT_PROP(node_id, reg_mode),                               \
 		.rx_boosted = DT_PROP(node_id, rx_boosted),                           \
-		.tx_offset = DT_PROP_OR(node_id, tx_offset, 0),                       \
+		.tx_offset = DT_PROP_OR(node_id, tx_power_offset, 0),                       \
 	}
 
 #define SX126X_DEVICE_INIT(node_id)                                           \
