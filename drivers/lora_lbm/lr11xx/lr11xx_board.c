@@ -285,7 +285,7 @@ static int lr11xx_pm_action(const struct device *dev, enum pm_device_action acti
 		LR11XX_CFG_RF_SW(node_id),                                            \
 		.reg_mode = DT_PROP(node_id, reg_mode),                               \
 		.rx_boosted = DT_PROP(node_id, rx_boosted),                           \
-		.tx_offset = DT_PROP_OR(node_id, tx_offset, 0),                       \
+		.tx_offset = DT_PROP_OR(node_id, tx_power_offset, 0),                       \
 		.pa_lf_lp_cfg_table = (lr11xx_pa_pwr_cfg_t*) DT_CAT(pa_lf_lp_cfg_table_, node_id), \
 		.pa_lf_hp_cfg_table = (lr11xx_pa_pwr_cfg_t*) DT_CAT(pa_lf_hp_cfg_table_, node_id), \
 		.pa_hf_cfg_table = (lr11xx_pa_pwr_cfg_t*) DT_CAT(pa_hf_cfg_table_, node_id),       \
