@@ -11,7 +11,7 @@ manifest:
     - name: lora_basics_modem
       path: modules/lib/lora_basics_modem
       url: https://github.com/IRNAS/SWL2001
-      revision: v0.3.2
+      revision: v0.3.3
 
   self:
     path: application
