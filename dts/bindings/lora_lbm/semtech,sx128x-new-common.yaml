@@ -1,0 +1,74 @@
+# Copyright (c) 2024 Semtech Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+description: Semtech SX128X LoRa radio module
+
+include: spi-device.yaml
+
+properties:
+  reset-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      GPIO connected to the radio's NRESET signal.
+
+      This signal is open-drain, active-low as interpreted by the modem.
+
+  busy-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      GPIO connected to the radio's BUSY signal.
+
+      This signal is high when the radio is ready to accept commands, and
+      low when it is processing a command.
+
+
+  dio1-gpios:
+    type: phandle-array
+    required: false
+    description: |
+      GPIO connected to the radio's DIO1 signal. This GPIO will be used as
+      a generic IRQ line from the chip.
+
+  dio2-gpios:
+    type: phandle-array
+    required: false
+    description: |
+      GPIO connected to the radio's DIO2 signal. This GPIO will be used as
+      a generic IRQ line from the chip.
+
+      Note that this conflicts with dio2-as-rf-switch.
+
+  dio3-gpios:
+    type: phandle-array
+    required: false
+    description: |
+      GPIO connected to the radio's DIO3 signal. This GPIO will be used as
+      a generic IRQ line from the chip.
+
+  reg-mode:
+    type: int
+    required: true
+    enum:
+      - 0 # LDO
+      - 1 # DCDC
+    description: |
+      Configuration of the radio's power regulator mode.
+
+      See constants SX128X_REG_MODE_* in dt-bindings/lora_lbm/sx128x.h
+
+  # EvaTODO: left out for now, there is no driver support for setting boosted mode
+  #rx-boosted:
+  #  type: boolean
+  #  description: |
+  #    Sets the radio in RX Boosted mode, allowing a ~2dB increased sensitivity,
+  #    at the expense of a ~2mA higher current consumption in RX mode.
+
+  tx-power-offset:
+    type: int
+    required: false
+    description: |
+      Default board-specific TX Power offset in dB. Defaults to 0.
+
+      Can be reconfigured at runtime via radio_utilities_set_tx_power_offset.
