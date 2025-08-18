@@ -42,11 +42,7 @@ static void lr11xx_board_event_callback(const struct device *dev, struct gpio_ca
 
 	if (gpio_pin_get_dt(&config->event)) {
 		/* Wait for value to drop */
-#ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_LEVEL
-		gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_LEVEL_INACTIVE);
-#elif CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_EDGE_TO
-	gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_EDGE_TO_INACTIVE);
-#endif
+		gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_EDGE_TO_INACTIVE);
 		/* Call provided callback */
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_OWN_THREAD
 		k_sem_give(&data->gpio_sem);
@@ -58,11 +54,7 @@ static void lr11xx_board_event_callback(const struct device *dev, struct gpio_ca
 		}
 #endif
 	} else {
-#ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_LEVEL
-		gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_LEVEL_ACTIVE);
-#elif CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_EDGE_TO
-	gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_EDGE_TO_ACTIVE);
-#endif
+		gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_EDGE_TO_ACTIVE);
 	}
 }
 
@@ -103,13 +95,7 @@ void lora_transceiver_board_enable_interrupt(const struct device *dev)
 {
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 	const struct lr11xx_hal_context_cfg_t *config = dev->config;
-#ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_LEVEL
-	gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_LEVEL_ACTIVE);
-#elif CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_EDGE_TO
 	gpio_pin_interrupt_configure_dt(&config->event, GPIO_INT_EDGE_TO_ACTIVE);
-#else
-	LOG_ERR("Unsupported event trigger type!");
-#endif // CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE
 #else
 	LOG_ERR("Event trigger not supported!");
 #endif // CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
