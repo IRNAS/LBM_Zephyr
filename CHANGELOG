@@ -1,3 +1,64 @@
+Irnas v0.6.0
+============
+
+Radio drivers:
+* Add SX128X support
+
+Irnas v0.5.0
+============
+
+Radio drivers:
+* Add user config to select interrupt type (LEVEL or EDGE_TO)
+
+Irnas v0.4.2
+============
+
+LoRa Basics Modem:
+* Update lora_basics_modem version to support factory_reset function
+
+Irnas v0.4.1
+============
+
+Radio drivers:
+* Fix TX power offset dts binding name.
+
+Irnas v0.4.0
+============
+
+Radio drivers:
+* Add config to call event callback directly from ISR
+
+Irnas v0.3.2
+============
+
+LoRa Basics Modem:
+* Fix CRC compute error in modem lib
+
+Irnas v0.3.1
+============
+
+LoRa Basics Modem:
+* Change lora_basics_modem version
+
+Irnas v0.3.0
+============
+
+Radio drivers:
+* Add an option to attach a user-defined irq callback function for LR11XX
+
+Irnas v0.2.0
+============
+
+LoRa Basics Modem:
+* Add user access to the lorawan_api_set_no_rx_packet_threshold
+
+Irnas v0.1.0
+============
+
+LoRa Basics Modem:
+* store join session settings
+* NCS 2.7 compatibility
+
 v0.6
 ====
 

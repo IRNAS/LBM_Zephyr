@@ -33,7 +33,7 @@ config LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 
 choice
 	prompt "Event trigger mode"
-	default LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_GLOBAL_THREAD
+	default LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_DIRECT
 	help
 	  Specify the type of triggering to be used by the LORA_BASICS_MODEM_DRIVERS driver.
 
@@ -56,29 +56,6 @@ config LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_DIRECT
 	select LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 
 endchoice # LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
-
-choice
-	prompt "Event trigger type"
-	default LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_EDGE_TO
-	help
-	  Specify the type of triggering to be used by the LORA_BASICS_MODEM_DRIVERS driver - edge to active/inactive or level active/inactive based.
-	  Driver operation will remain unchanged. There is a difference in power consumption of ~20 uA extra when using edge_to trigger.
-	  If LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_NONE is selected, set this to LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_NONE.
-
-config LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_NONE
-	bool "No trigger type"
-	help
-	  No trigger type is used, the driver will not use any event trigger. Should be set if LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_NONE is selected.
-
-config LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_EDGE_TO
-	bool "Edge to active / inactive trigger"
-	depends on LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
-
-config LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE_LEVEL
-	bool "Level active/inactive trigger"
-	depends on LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
-
-endchoice # LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_TYPE
 
 config LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_THREAD_PRIORITY
 	int "Thread priority"

@@ -47,10 +47,10 @@ endif()
 if(CONFIG_SEMTECH_SX128X)
   # Library flag that disables some warnings
   # zephyr_library_compile_definitions(LR11XX_DISABLE_WARNINGS)
-
-  zephyr_library_sources(sx12xx/sx128x_hal.c)
+  zephyr_include_directories(sx128x)
+  zephyr_library_sources(sx128x/sx128x_hal.c sx128x/sx128x_board.c)
 
   zephyr_library_sources_ifdef(CONFIG_LORA_BASICS_MODEM_DRIVERS_RAL_RALF
-    sx12xx/sx128x_ral_bsp.c
+    sx128x/sx128x_ral_bsp.c
   )
 endif()
