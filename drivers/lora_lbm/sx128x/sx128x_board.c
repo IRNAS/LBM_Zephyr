@@ -261,7 +261,7 @@ static int sx128x_init(const struct device *dev)
 	}
 
 #define SX128X_DEVICE_INIT(node_id)                                           \
-	DEVICE_DT_DEFINE(node_id, sx128x_init, PM_DEVICE_DT_GET(node_id),         \
+	DEVICE_DT_DEFINE(node_id, sx128x_init, NULL,         \
 			&sx128x_data_##node_id, &sx128x_config_##node_id,                 \
 			POST_KERNEL, CONFIG_LORA_BASICS_MODEM_DRIVERS_INIT_PRIORITY, NULL);
 
