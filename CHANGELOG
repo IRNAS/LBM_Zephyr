@@ -1,3 +1,15 @@
+Irnas v0.6.2
+============
+
+LoRa Basics Modem:
+* Fix typo in Kconfig
+
+Irnas v0.6.1
+============
+
+Radio drivers:
+* Bug in SX128X board definition.
+
 Irnas v0.6.0
 ============
 
