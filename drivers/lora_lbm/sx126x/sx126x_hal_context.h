@@ -7,6 +7,8 @@
 #ifndef SX126X_HAL_CONTEXT_H
 #define SX126X_HAL_CONTEXT_H
 
+#include <radio_hal_context.h>
+
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/spi.h>
 #include <zephyr/kernel.h>
@@ -33,6 +35,8 @@ typedef struct sx126x_pa_pwr_cfg_s
 
 
 struct sx126x_hal_context_cfg_t {
+	radio_hal_context_type_t type; /* Context type identifier */
+
 	struct spi_dt_spec spi; /* spi peripheral */
 
 	struct gpio_dt_spec reset;  /* reset pin */
@@ -90,6 +94,11 @@ struct sx126x_hal_context_data_t {
 
 // FIXME: sx126x_standby_cfgs_e, sx126x_reg_mods_e, sx126x_tcxo_ctrl_voltages_e
 
+// LoRa LBM Transceiver interface implementation
+void sx126x_attach_interrupt(const struct device *dev, event_cb_t cb);
+void sx126x_enable_interrupt(const struct device *dev);
+void sx126x_disable_interrupt(const struct device *dev);
+uint32_t sx126x_get_tcxo_startup_delay_ms(const struct device *dev);
 
 #ifdef __cplusplus
 }

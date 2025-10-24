@@ -3,6 +3,7 @@
 
 zephyr_include_directories(include)
 zephyr_library()
+zephyr_library_sources(include/radio_utilities.c include/lora_lbm_transceiver.c)
 
 # Disable all warnings for Semtech code.
 #

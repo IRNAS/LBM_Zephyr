@@ -7,6 +7,8 @@
 #ifndef LR11XX_HAL_CONTEXT_H
 #define LR11XX_HAL_CONTEXT_H
 
+#include <radio_hal_context.h>
+
 #include <stdint.h>
 #include <sys/_stdint.h>
 #include <zephyr/drivers/gpio.h>
@@ -49,6 +51,8 @@ typedef struct lr11xx_pa_pwr_cfg_s
  *
  */
 struct lr11xx_hal_context_cfg_t {
+	radio_hal_context_type_t type; /* Context type identifier */
+
 	struct spi_dt_spec spi; /* spi peripheral */
 
 	struct gpio_dt_spec reset;  /* reset pin */
@@ -99,6 +103,13 @@ struct lr11xx_hal_context_data_t {
 	radio_sleep_status_t radio_status;
 	uint8_t tx_offset; /* Board TX power offset */
 };
+
+// LoRa LBM Transceiver interface implementation
+void lr11xx_attach_interrupt(const struct device *dev, event_cb_t cb);
+void lr11xx_enable_interrupt(const struct device *dev);
+void lr11xx_disable_interrupt(const struct device *dev);
+uint32_t lr11xx_get_tcxo_startup_delay_ms(const struct device *dev);
+int32_t lr11xx_get_model(const struct device *dev);
 
 #ifdef __cplusplus
 }
