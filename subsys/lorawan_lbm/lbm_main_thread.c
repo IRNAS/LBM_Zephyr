@@ -13,6 +13,8 @@
 
 LOG_MODULE_DECLARE(smtc_modem, CONFIG_LORA_BASICS_MODEM_LOG_LEVEL);
 
+#define STACK_ID 0
+
 static const struct device *transceiver = DEVICE_DT_GET(DT_CHOSEN(zephyr_lora_transceiver));
 
 static struct k_thread lbm_main_thread_data;
@@ -25,9 +27,9 @@ static void lora_basics_modem_main_thread(void *p1, void *p2, void *p3)
 	struct smtc_modem_hal_cb *hal_cb = p2;
 	ARG_UNUSED(p3);
 
-	smtc_modem_hal_register_callbacks(hal_cb);
+	smtc_modem_hal_register_callbacks(STACK_ID, hal_cb);
 	smtc_modem_set_radio_context(transceiver);
-	smtc_modem_hal_init(transceiver);
+	smtc_modem_hal_init(STACK_ID, transceiver);
 	smtc_modem_init(event_callback);
 
 	LOG_INF("Starting loop...");

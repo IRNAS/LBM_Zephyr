@@ -49,6 +49,8 @@ LOG_MODULE_REGISTER(porting_tests, 3);
  * --- PRIVATE CONSTANTS -------------------------------------------------------
  */
 
+ #define STACK_ID 0
+
 // !! SHOULD BE DEFINED BY USER !!
 #define ENABLE_TEST_FLASH 0  // Enable flash porting test BUT disable other porting tests
 
@@ -252,8 +254,8 @@ int main( void )
 
     modem_radio.ral.context = transceiver;
 
-	smtc_modem_hal_init(transceiver);
-	smtc_modem_hal_register_callbacks(&prv_hal_cb);
+	smtc_modem_hal_init(STACK_ID, transceiver);
+	smtc_modem_hal_register_callbacks(STACK_ID, &prv_hal_cb);
 
     // Disable IRQ to avoid unwanted behaviour during init
     hal_mcu_disable_irq( );

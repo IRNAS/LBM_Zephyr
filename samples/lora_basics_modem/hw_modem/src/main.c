@@ -93,8 +93,8 @@ int main(void)
 	};
 
 	smtc_modem_set_radio_context(transceiver);
-	smtc_modem_hal_init(transceiver);
-	smtc_modem_hal_register_callbacks(&prv_hal_cb);
+	smtc_modem_hal_init(STACK_ID,transceiver);
+	smtc_modem_hal_register_callbacks(STACK_ID, &prv_hal_cb);
 
 	cmd_parser_set_transceiver_context((void*)transceiver);
 
