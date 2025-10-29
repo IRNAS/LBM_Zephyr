@@ -29,8 +29,6 @@ LOG_MODULE_REGISTER(smtc_modem_hal, CONFIG_LORA_BASICS_MODEM_LOG_LEVEL);
 struct smtc_modem_hal_ctx {
 	/* transceiver device pointer */
 	const struct device *transceiver_dev;
-	/* External callbacks */
-	struct smtc_modem_hal_cb *hal_cb;
 
 	/* context and callback for modem_hal_timer */
 	void *smtc_modem_hal_timer_context;
@@ -54,6 +52,9 @@ struct smtc_modem_hal_ctx {
 
 /* ------------ Local context ------------ */
 static struct smtc_modem_hal_ctx prv_ctx[CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS];
+
+/* External callbacks - we do not need those per radio */
+struct smtc_modem_hal_cb *prv_hal_cb;
 
 /* A binary semaphore to notify the main LBM loop */
 K_SEM_DEFINE(prv_main_event_sem, 0, 1);
@@ -84,9 +85,8 @@ void smtc_modem_hal_init(uint8_t stack_id, const struct device *transceiver)
 	k_timer_init(&prv_ctx[stack_id].smtc_modem_hal_timer, prv_smtc_modem_hal_timer_handler, NULL);
 }
 
-void smtc_modem_hal_register_callbacks(uint8_t stack_id, struct smtc_modem_hal_cb *hal_cb)
+void smtc_modem_hal_register_callbacks(struct smtc_modem_hal_cb *hal_cb)
 {
-	__ASSERT(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS, "Invalid stack ID");
 	__ASSERT_NO_MSG(hal_cb);
 	__ASSERT_NO_MSG(hal_cb->get_battery_level);
 	__ASSERT_NO_MSG(hal_cb->get_temperature);
@@ -105,7 +105,7 @@ void smtc_modem_hal_register_callbacks(uint8_t stack_id, struct smtc_modem_hal_c
 	__ASSERT_NO_MSG(hal_cb->context_restore);
 #endif /* CONFIG_LORA_BASICS_MODEM_USER_STORAGE_IMPL */
 
-	prv_ctx[stack_id].hal_cb = hal_cb;
+	prv_hal_cb = hal_cb;
 }
 
 /* ------------ Reset management ------------ */
@@ -174,40 +174,40 @@ static void prv_smtc_modem_hal_timer_handler(struct k_timer *timer)
 	}
 };
 
-void smtc_modem_hal_start_timer(const uint32_t milliseconds, void (*callback)(void *context),
+void smtc_modem_hal_start_timer(uint8_t stack_id, const uint32_t milliseconds, void (*callback)(void *context),
 				void *context)
 {
-	prv_smtc_modem_hal_timer_callback = callback;
-	prv_smtc_modem_hal_timer_context = context;
+	prv_ctx[stack_id].smtc_modem_hal_timer_callback = callback;
+	prv_ctx[stack_id].smtc_modem_hal_timer_context = context;
 
 	/* start one-shot timer */
-	k_timer_start(&prv_smtc_modem_hal_timer, K_MSEC(milliseconds), K_NO_WAIT);
+	k_timer_start(&prv_ctx[stack_id].smtc_modem_hal_timer, K_MSEC(milliseconds), K_NO_WAIT);
 }
 
-void smtc_modem_hal_stop_timer(void)
+void smtc_modem_hal_stop_timer(uint8_t stack_id)
 {
-	k_timer_stop(&prv_smtc_modem_hal_timer);
+	k_timer_stop(&prv_ctx[stack_id].smtc_modem_hal_timer);
 }
 
 /* ------------ IRQ management ------------ */
 
-void smtc_modem_hal_disable_modem_irq(void)
+void smtc_modem_hal_disable_modem_irq(uint8_t stack_id)
 {
-	prv_modem_irq_enabled = false;
+	prv_ctx[stack_id].modem_irq_enabled = false;
 }
 
-void smtc_modem_hal_enable_modem_irq(void)
+void smtc_modem_hal_enable_modem_irq(uint8_t stack_id)
 {
-	prv_modem_irq_enabled = true;
-	lora_transceiver_board_enable_interrupt(prv_transceiver_dev);
+	prv_ctx[stack_id].modem_irq_enabled = true;
+	lora_transceiver_board_enable_interrupt(prv_ctx[stack_id].transceiver_dev);
 	// FIXME: pending timer IRQ should be called at reenable time?
-	if (prv_radio_irq_pending_while_disabled) {
-		prv_radio_irq_pending_while_disabled = false;
-		prv_smtc_modem_hal_radio_irq_callback(prv_smtc_modem_hal_radio_irq_context);
+	if (prv_ctx[stack_id].radio_irq_pending_while_disabled) {
+		prv_ctx[stack_id].radio_irq_pending_while_disabled = false;
+		prv_ctx[stack_id].smtc_modem_hal_radio_irq_callback(prv_ctx[stack_id].smtc_modem_hal_radio_irq_context);
 	}
-	if (prv_modem_irq_pending_while_disabled) {
-		prv_modem_irq_pending_while_disabled = false;
-		prv_smtc_modem_hal_timer_callback(prv_smtc_modem_hal_timer_context);
+	if (prv_ctx[stack_id].modem_irq_pending_while_disabled) {
+		prv_ctx[stack_id].modem_irq_pending_while_disabled = false;
+		prv_ctx[stack_id].smtc_modem_hal_timer_callback(prv_ctx[stack_id].smtc_modem_hal_timer_context);
 	}
 }
 
@@ -355,6 +355,8 @@ void smtc_modem_hal_context_store(const modem_context_type_t ctx_type, uint32_t 
 		memcpy(page_buffer, buffer, size);
 		rc = flash_area_write(context_flash_area, real_offset, page_buffer, real_size);
 	}
+
+	LOG_INF("Write %d bytes at offset %d (real_offset=%d), rc=%d", real_size, offset, real_offset, rc);
 
 	return;
 }
@@ -512,19 +514,27 @@ uint32_t smtc_modem_hal_get_random_nb_in_range(const uint32_t val_1, const uint3
  */
 static void prv_transceiver_event_cb(const struct device *dev)
 {
-	struct smtc_modem_hal_ctx *ctx = CONTAINER_OF(dev, struct smtc_modem_hal_ctx, transceiver_dev);
+	uint8_t stack_id = 0;
+	while(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS) {
+		if(prv_ctx[stack_id].transceiver_dev == dev) {
+			break;
+		}
+		stack_id++;
+	}
+	__ASSERT(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS, "Could not find stack for transceiver device");
 
+	LOG_WRN("Radio IRQ received on stack %d", stack_id);
 #ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
 	/* Call user-define cb first, even if disabled by the smtc modem */
-	if(ctx->user_irq_callback) {
-		ctx->user_irq_callback(ctx->smtc_modem_hal_radio_irq_context);
+	if(prv_ctx[stack_id].user_irq_callback) {
+		prv_ctx[stack_id].user_irq_callback(prv_ctx[stack_id].smtc_modem_hal_radio_irq_context);
 	}
 #endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
-	if (ctx->modem_irq_enabled) {
+	if (prv_ctx[stack_id].modem_irq_enabled) {
 		/* Due to the way the transceiver driver is implemented, this is called from the system workq. */
-		ctx->smtc_modem_hal_radio_irq_callback(ctx->smtc_modem_hal_radio_irq_context);
+		prv_ctx[stack_id].smtc_modem_hal_radio_irq_callback(prv_ctx[stack_id].smtc_modem_hal_radio_irq_context);
 	} else {
-		ctx->radio_irq_pending_while_disabled = true;
+		prv_ctx[stack_id].radio_irq_pending_while_disabled = true;
 	}
 }
 
@@ -557,13 +567,7 @@ void smtc_modem_hal_irq_reset_radio_irq(uint8_t stack_id)
 	lora_transceiver_board_enable_interrupt(prv_ctx[stack_id].transceiver_dev);
 }
 
-void smtc_modem_hal_radio_irq_clear_pending(void)
-{
-	prv_modem_irq_pending_while_disabled = false;
-	prv_radio_irq_pending_while_disabled = false;
-}
-
-bool smtc_modem_external_stack_currently_use_radio( void )
+bool smtc_modem_external_stack_currently_use_radio( uint8_t stack_id )
 {
     /* return false if the radio is available for the lbm stack  - except a very specific application,
      * this function should always return false. This function is used to check if the radio is use
@@ -583,13 +587,13 @@ void smtc_modem_hal_stop_radio_tcxo(void)
 	 * empty. See 5.26 of the porting guide. */
 }
 
-uint32_t smtc_modem_hal_get_radio_tcxo_startup_delay_ms(void)
+uint32_t smtc_modem_hal_get_radio_tcxo_startup_delay_ms(uint8_t stack_id)
 {
 	/* From the porting guide:
 	 * If the TCXO is configured by the RAL BSP to start up automatically, then the value used
 	 * here should be the same as the startup delay used in the RAL BSP.
 	 */
-	return lora_transceiver_get_tcxo_startup_delay_ms(prv_transceiver_dev);
+	return lora_transceiver_get_tcxo_startup_delay_ms(prv_ctx[stack_id].transceiver_dev);
 }
 
 void smtc_modem_hal_set_ant_switch(uint8_t stack_id, bool is_tx_on)
@@ -661,7 +665,7 @@ uint16_t smtc_modem_hal_get_voltage_mv(void)
 
 /* ------------ Misc ------------ */
 
-int8_t smtc_modem_hal_get_board_delay_ms(void)
+int8_t smtc_modem_hal_get_board_delay_ms(uint8_t stack_id)
 {
 	/* the wakeup time is probably closer to 0ms then 1ms,
 	 * but just to be safe: */

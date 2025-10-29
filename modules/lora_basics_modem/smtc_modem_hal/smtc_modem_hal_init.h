@@ -151,11 +151,10 @@ void smtc_modem_hal_init(uint8_t stack_id, const struct device *transceiver);
  * Calling this too late (after Device Management messages are received) might
  * create undefined behaviour.
  *
- * @param[in] stack_id The stack ID for which the callbacks are registered.
  * @param[in] hal_cb The callbacks to use for the hal implementation. All must be set.
  *
  */
-void smtc_modem_hal_register_callbacks(uint8_t stack_id, struct smtc_modem_hal_cb *hal_cb);
+void smtc_modem_hal_register_callbacks(struct smtc_modem_hal_cb *hal_cb);
 
 #ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
 /**

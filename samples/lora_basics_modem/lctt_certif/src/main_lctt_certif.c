@@ -285,8 +285,8 @@ int                                main( void )
 	};
 
     smtc_modem_hal_init(STACK_ID, transceiver);
-    smtc_modem_hal_register_callbacks(STACK_ID, &prv_hal_cb);
-    smtc_modem_set_radio_context(transceiver);
+    smtc_modem_hal_register_callbacks(&prv_hal_cb);
+    smtc_modem_set_radio_context(STACK_ID, transceiver);
 
     // Disable IRQ to avoid unwanted behavior during init
     hal_mcu_disable_irq( );

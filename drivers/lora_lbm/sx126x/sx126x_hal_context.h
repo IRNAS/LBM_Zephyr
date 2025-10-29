@@ -7,6 +7,8 @@
 #ifndef SX126X_HAL_CONTEXT_H
 #define SX126X_HAL_CONTEXT_H
 
+#include "lora_lbm_transceiver.h"
+
 #include <radio_hal_context.h>
 
 #include <zephyr/drivers/gpio.h>
@@ -64,11 +66,6 @@ typedef enum {
 	RADIO_AWAKE
 } radio_sleep_status_t;
 
-/**
- * @brief Callback upon firing event trigger
- *
- */
-typedef void (*event_cb_t)(const struct device *dev);
 
 struct sx126x_hal_context_data_t {
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER

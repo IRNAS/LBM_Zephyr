@@ -7,6 +7,8 @@
 #ifndef LR11XX_HAL_CONTEXT_H
 #define LR11XX_HAL_CONTEXT_H
 
+#include "lora_lbm_transceiver.h"
+
 #include <radio_hal_context.h>
 
 #include <stdint.h>
@@ -21,12 +23,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @brief Callback upon firing event trigger
- *
- */
-typedef void (*event_cb_t)(const struct device *dev);
 
 struct lr11xx_hal_context_tcxo_cfg_t {
 	ral_xosc_cfg_t xosc_cfg;

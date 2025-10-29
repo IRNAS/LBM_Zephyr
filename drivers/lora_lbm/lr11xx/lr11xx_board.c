@@ -17,7 +17,6 @@ LOG_MODULE_REGISTER(lr11xx_board, CONFIG_LORA_BASICS_MODEM_DRIVERS_LOG_LEVEL);
 
 #include "lora_lbm_transceiver.h"
 #include "lr11xx_hal_context.h"
-#include "lr11xx_radio_types.h"
 #include "lr11xx_system_types.h"
 
 #define LR11XX_SPI_OPERATION (SPI_WORD_SET(8) | SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB)

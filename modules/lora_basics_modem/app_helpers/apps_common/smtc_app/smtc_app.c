@@ -137,9 +137,9 @@ void smtc_app_init(const struct device *lora_radio, struct smtc_app_event_callba
 	};
 
 	smtc_modem_hal_init(SMTC_APP_STACK_ID, lora_radio);
-	smtc_modem_hal_register_callbacks(SMTC_APP_STACK_ID, &prv_hal_cb);
+	smtc_modem_hal_register_callbacks(&prv_hal_cb);
 
-	smtc_modem_set_radio_context(lora_radio);
+	smtc_modem_set_radio_context(SMTC_APP_STACK_ID, lora_radio);
 	smtc_modem_init(&prv_event_process);
 }
 
