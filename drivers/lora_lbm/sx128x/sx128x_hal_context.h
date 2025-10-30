@@ -42,9 +42,9 @@ struct sx128x_hal_context_cfg_t {
 
 // This type holds the current sleep status of the radio
 typedef enum {
-	RADIO_SLEEP,
-	RADIO_AWAKE
-} radio_sleep_status_t;
+	SX128X_SLEEP,
+	SX128X_AWAKE
+} sx128x_sleep_status_t;
 
 struct sx128x_hal_context_data_t {
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
@@ -63,7 +63,7 @@ struct sx128x_hal_context_data_t {
 	struct k_sem trig_sem;
 #endif /* CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_OWN_THREAD */
 #endif /* CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER */
-	radio_sleep_status_t radio_status;
+	sx128x_sleep_status_t radio_status;
 	uint8_t tx_offset; /* Board TX power offset at reset */
 };
 

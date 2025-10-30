@@ -78,9 +78,9 @@ struct lr11xx_hal_context_cfg_t {
 
 // This type holds the current sleep status of the radio
 typedef enum {
-	RADIO_SLEEP,
-	RADIO_AWAKE
-} radio_sleep_status_t;
+	LR11XX_SLEEP,
+	LR11XX_AWAKE
+} lr11xx_sleep_status_t;
 
 struct lr11xx_hal_context_data_t {
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
@@ -96,7 +96,7 @@ struct lr11xx_hal_context_data_t {
 	struct k_sem trig_sem;
 #endif /* CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_OWN_THREAD */
 #endif /* CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER */
-	radio_sleep_status_t radio_status;
+	lr11xx_sleep_status_t radio_status;
 	uint8_t tx_offset; /* Board TX power offset */
 };
 

@@ -55,7 +55,7 @@ static void lr11xx_hal_check_device_ready(const void* context)
 	const struct lr11xx_hal_context_cfg_t *config = dev->config;
 	struct lr11xx_hal_context_data_t *data = dev->data;
 
-	if (data->radio_status != RADIO_SLEEP) {
+	if (data->radio_status != LR11XX_SLEEP) {
 		lr11xx_hal_wait_on_busy(context);
 	} else {
 		// Busy is HIGH in sleep mode, wake-up the device with a small glitch on NSS
@@ -64,7 +64,7 @@ static void lr11xx_hal_check_device_ready(const void* context)
 		gpio_pin_set_dt(cs, 1);
 		gpio_pin_set_dt(cs, 0);
 		lr11xx_hal_wait_on_busy(context);
-		data->radio_status = RADIO_AWAKE;
+		data->radio_status = LR11XX_AWAKE;
 	}
 }
 
@@ -114,7 +114,7 @@ lr11xx_hal_status_t lr11xx_hal_write(const void *context,
 	// LR11XX_SYSTEM_SET_SLEEP_OC=0x011B opcode.
 	// In sleep mode the radio busy line is held at 1 => do not test it
 	if ((command[0] == 0x01) && (command_length > 1) && (command[1] == 0x1B)) {
-		dev_data->radio_status = RADIO_SLEEP;
+		dev_data->radio_status = LR11XX_SLEEP;
 
 		// add a incompressible delay to prevent trying to wake the radio
 		// before it is full asleep
@@ -262,7 +262,7 @@ lr11xx_hal_status_t lr11xx_hal_reset(const void *context)
 
 	// Wait 200ms until internal lr11xx fw is ready
 	k_sleep(K_MSEC(200));
-	data->radio_status = RADIO_AWAKE;
+	data->radio_status = LR11XX_AWAKE;
 
 	return LR11XX_HAL_STATUS_OK;
 }

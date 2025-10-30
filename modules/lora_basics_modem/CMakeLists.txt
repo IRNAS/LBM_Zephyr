@@ -32,10 +32,6 @@ if(CONFIG_ZEPHYR_LORA_BASICS_MODEM_MODULE)
       ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src
       ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src
     )
-    zephyr_library_sources(
-      ${LBM_RAL_SOURCES}
-      ${LBM_RALF_SOURCES}
-    )
   endif()
 
   if(CONFIG_LORA_BASICS_MODEM)

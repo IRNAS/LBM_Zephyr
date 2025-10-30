@@ -163,7 +163,7 @@ static int lr11xx_init(const struct device *dev)
 	}
 
 	data->lr11xx_dev = dev;
-	data->radio_status = RADIO_AWAKE;
+	data->radio_status = LR11XX_AWAKE;
 	data->tx_offset = config->tx_offset;
 
 	// Event pin trigger config

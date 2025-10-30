@@ -25,8 +25,12 @@ zephyr_library_sources_ifndef(CONFIG_DT_HAS_SEMTECH_LR1121_ENABLED
   ${LBM_LR11XX_DIR}/lr11xx_gnss.c
 )
 
-set(LBM_RAL_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_lr11xx.c)
-set(LBM_RALF_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_lr11xx.c)
+if(CONFIG_LORA_BASICS_MODEM_DRIVERS_RAL_RALF)
+  zephyr_library_sources(
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_lr11xx.c
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_lr11xx.c
+  )
+endif()
 
 zephyr_library_sources_ifdef(CONFIG_LORA_BASICS_MODEM_CRYPTOGRAPHY_LR11XX
   ${LBM_SMTC_MODEM_CORE_DIR}/smtc_modem_crypto/lr11xx_crypto_engine/lr11xx_ce.c

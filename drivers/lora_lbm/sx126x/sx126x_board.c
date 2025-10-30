@@ -187,7 +187,7 @@ static int sx126x_init(const struct device *dev)
 	}
 
 	data->sx126x_dev = dev;
-	data->radio_status = RADIO_AWAKE;
+	data->radio_status = SX126X_AWAKE;
 	data->tx_offset = config->tx_offset;
 
 	// Event pin trigger config
