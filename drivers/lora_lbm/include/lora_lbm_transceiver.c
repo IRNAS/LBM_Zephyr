@@ -33,16 +33,19 @@ void lora_transceiver_board_attach_interrupt(const struct device *dev, event_cb_
 		case RADIO_HAL_CONTEXT_LR11XX: {
 #ifdef CONFIG_SEMTECH_LR11XX
 			lr11xx_attach_interrupt(dev, cb);
+			break;
 #endif
 		}
 		case RADIO_HAL_CONTEXT_SX126X: {
 #ifdef CONFIG_SEMTECH_SX126X
 			sx126x_attach_interrupt(dev, cb);
+			break;
 #endif
 		}
 		case RADIO_HAL_CONTEXT_SX128X: {
 #ifdef CONFIG_SEMTECH_SX128X
 			sx128x_attach_interrupt(dev, cb);
+			break;
 #endif
 		}
 		default:
@@ -59,16 +62,19 @@ void lora_transceiver_board_enable_interrupt(const struct device *dev)
 		case RADIO_HAL_CONTEXT_LR11XX: {
 #ifdef CONFIG_SEMTECH_LR11XX
 			lr11xx_enable_interrupt(dev);
+			break;
 #endif
 		}
 		case RADIO_HAL_CONTEXT_SX126X: {
 #ifdef CONFIG_SEMTECH_SX126X
 			sx126x_enable_interrupt(dev);
+			break;
 #endif
 		}
 		case RADIO_HAL_CONTEXT_SX128X: {
 #ifdef CONFIG_SEMTECH_SX128X
 			sx128x_enable_interrupt(dev);
+			break;
 #endif
 		}
 		default:
@@ -85,16 +91,19 @@ void lora_transceiver_board_disable_interrupt(const struct device *dev)
 		case RADIO_HAL_CONTEXT_LR11XX: {
 #ifdef CONFIG_SEMTECH_LR11XX
 			lr11xx_disable_interrupt(dev);
+			break;
 #endif
 		}
 		case RADIO_HAL_CONTEXT_SX126X: {
 #ifdef CONFIG_SEMTECH_SX126X
 			sx126x_disable_interrupt(dev);
+			break;
 #endif
 		}
 		case RADIO_HAL_CONTEXT_SX128X: {
 #ifdef CONFIG_SEMTECH_SX128X
 			sx128x_disable_interrupt(dev);
+			break;
 #endif
 		}
 		default:
