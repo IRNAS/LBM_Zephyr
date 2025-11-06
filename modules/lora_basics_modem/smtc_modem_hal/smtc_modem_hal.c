@@ -523,7 +523,6 @@ static void prv_transceiver_event_cb(const struct device *dev)
 	}
 	__ASSERT(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS, "Could not find stack for transceiver device");
 
-	LOG_WRN("Radio IRQ received on stack %d", stack_id);
 #ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
 	/* Call user-define cb first, even if disabled by the smtc modem */
 	if(prv_ctx[stack_id].user_irq_callback) {
