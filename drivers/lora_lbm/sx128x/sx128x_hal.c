@@ -25,17 +25,16 @@ static void sx128x_hal_wait_on_busy(const void* context)
 {
 	const struct device *dev = (const struct device *)context;
 	const struct sx128x_hal_context_cfg_t *config = dev->config;
-	bool ret;
 
-	ret = WAIT_FOR(
-		gpio_pin_get_dt(&config->busy) == 0,
-		(1000 * CONFIG_LORA_BASICS_MODEM_DRIVERS_HAL_WAIT_ON_BUSY_TIMEOUT_MSEC),
-		k_usleep(100)
-	);
-	if (!ret) {
-		LOG_ERR("Timeout of %dms hit when waiting for sx128x busy!",
-			CONFIG_LORA_BASICS_MODEM_DRIVERS_HAL_WAIT_ON_BUSY_TIMEOUT_MSEC);
-		k_oops();
+	uint64_t timeout = k_uptime_get() + CONFIG_LORA_BASICS_MODEM_DRIVERS_HAL_WAIT_ON_BUSY_TIMEOUT_MSEC;
+
+	while(gpio_pin_get_dt(&config->busy) == 1) {
+		if (k_uptime_get() > timeout) {
+			LOG_ERR("Timeout of %dms hit when waiting for sx128x busy!",
+				CONFIG_LORA_BASICS_MODEM_DRIVERS_HAL_WAIT_ON_BUSY_TIMEOUT_MSEC);
+			k_oops();
+		}
+		k_usleep(100);
 	}
 }
 

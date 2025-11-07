@@ -543,6 +543,14 @@ void smtc_modem_hal_radio_irq_clear_pending(void)
 	prv_radio_irq_pending_while_disabled = false;
 }
 
+bool smtc_modem_external_stack_currently_use_radio( void )
+{
+    /* return false if the radio is available for the lbm stack  - except a very specific application, 
+     * this function should always return false. This function is used to check if the radio is use 
+     * by an external stack - we should add implementation */
+    return false;
+}
+
 void smtc_modem_hal_start_radio_tcxo(void)
 {
 	/* We only support TCXO's that are wired to the transceiver. In such cases, this function must be
