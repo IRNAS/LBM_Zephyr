@@ -23,6 +23,6 @@ set(LBM_RAL_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_sx128x.c)
 set(LBM_RALF_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_sx128x.c)
 
 
-# FIXME: why this specification?
+# FIXME: why this specification? - NOTE: Probably because there was an error in regions.cmake file that is now fixed?
 # LR1MAC_C_SOURCES += \
-#   smtc_modem_core/lr1mac/src/smtc_real/src/region_ww2g4.c
+#   smtc_modem_core/lr1mac/src/smtc_real/src/region_ww_2g4.c

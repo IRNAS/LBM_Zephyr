@@ -131,6 +131,8 @@ zephyr_library_sources_ifdef(CONFIG_LORA_BASICS_MODEM_FUOTA_V2
   ${LBM_SMTC_MODEM_CORE_DIR}/lorawan_packages/fragmented_data_block_transport/v2.0.0/fragmentation_helper_v2.0.0.c
   ${LBM_SMTC_MODEM_CORE_DIR}/lorawan_packages/fragmented_data_block_transport/v2.0.0/lorawan_fragmentation_package_v2.0.0.c
   ${LBM_SMTC_MODEM_CORE_DIR}/lorawan_packages/remote_multicast_setup/v2.0.0/lorawan_remote_multicast_setup_package_v2.0.0.c
+  ${LBM_SMTC_MODEM_CORE_DIR}/smtc_modem_crypto/soft_secure_element/aes.c
+  ${LBM_SMTC_MODEM_CORE_DIR}/smtc_modem_crypto/soft_secure_element/cmac.c
 )
 zephyr_library_sources_ifdef(CONFIG_LORA_BASICS_MODEM_FUOTA_ENABLE_FMP
   ${LBM_SMTC_MODEM_CORE_DIR}/lorawan_packages/firmware_management_protocol/lorawan_fmp_package.c
@@ -150,6 +152,7 @@ zephyr_include_directories_ifdef(CONFIG_LORA_BASICS_MODEM_FUOTA_V1
 )
 zephyr_include_directories_ifdef(CONFIG_LORA_BASICS_MODEM_FUOTA_V2
   ${LBM_SMTC_MODEM_CORE_DIR}/lorawan_packages/fragmented_data_block_transport/v2.0.0
+  ${LBM_SMTC_MODEM_CORE_DIR}/smtc_modem_crypto/soft_secure_element
 )
 zephyr_include_directories_ifdef(CONFIG_LORA_BASICS_MODEM_FUOTA_ENABLE_FMP
   ${LBM_SMTC_MODEM_CORE_DIR}/lorawan_packages/firmware_management_protocol

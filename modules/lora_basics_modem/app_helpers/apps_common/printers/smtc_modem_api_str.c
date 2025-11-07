@@ -42,8 +42,8 @@ const char *smtc_modem_region_to_str(const smtc_modem_region_t value)
 		return "SMTC_MODEM_REGION_AU_915";
 	case SMTC_MODEM_REGION_CN_470:
 		return "SMTC_MODEM_REGION_CN_470";
-	case SMTC_MODEM_REGION_WW2G4:
-		return "SMTC_MODEM_REGION_WW2G4";
+	case SMTC_MODEM_REGION_WW_2G4:
+		return "SMTC_MODEM_REGION_WW_2G4";
 	case SMTC_MODEM_REGION_AS_923_GRP2:
 		return "SMTC_MODEM_REGION_AS_923_GRP2";
 	case SMTC_MODEM_REGION_AS_923_GRP3:
