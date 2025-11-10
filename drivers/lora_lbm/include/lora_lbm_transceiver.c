@@ -135,6 +135,8 @@ uint32_t lora_transceiver_get_tcxo_startup_delay_ms(const struct device *dev)
 		default:
 			break;
 	}
+
+	return 0;
 }
 
 int32_t lora_transceiver_get_model(const struct device *dev)
