@@ -155,3 +155,23 @@ int32_t lora_transceiver_get_model(const struct device *dev)
 	}
 	return -1;
 }
+
+
+void lora_transceiver_set_front_end_module_cbs(const struct device *dev, struct front_end_module_cbs_t fem_cbs)
+{
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	const radio_hal_context_type_t *context_type =
+		((const radio_hal_context_type_t *)dev->config);
+	switch (*context_type) {
+		case RADIO_HAL_CONTEXT_SX128X: {
+#ifdef CONFIG_SEMTECH_SX128X
+			sx128x_set_front_end_module_cbs(dev, fem_cbs);
+			break;
+#endif
+		}
+		/* EvaTODO: add support for other board types */
+		default:
+			break;
+	}
+#endif
+}

@@ -11,6 +11,8 @@
 #include "sx128x.h"
 #include "sx128x_hal_context.h"
 
+#define SX128X_MIN_OUTPUT_POWER -18
+#define SX128X_MAX_OUTPUT_POWER 13
 
 void ral_sx128x_bsp_get_reg_mode(const void* context, sx128x_reg_mod_t* reg_mode)
 {
@@ -26,17 +28,17 @@ void ral_sx128x_bsp_get_tx_cfg(const void* context,
 	// get board tx power offset
 	int8_t board_tx_pwr_offset_db = radio_utilities_get_tx_power_offset(context);
 
-	int16_t power = input_params->system_output_pwr_in_dbm + board_tx_pwr_offset_db;
+	int16_t power = input_params->system_output_pwr_in_dbm - board_tx_pwr_offset_db;
 
-	if( power > 13 )
+	if( power > SX128X_MAX_OUTPUT_POWER )
 	{
-		output_params->chip_output_pwr_in_dbm_configured = 13;
-		output_params->chip_output_pwr_in_dbm_expected   = 13;
+		output_params->chip_output_pwr_in_dbm_configured = SX128X_MAX_OUTPUT_POWER;
+		output_params->chip_output_pwr_in_dbm_expected   = SX128X_MAX_OUTPUT_POWER;
 	}
-	else if( power < -18 )
+	else if( power < SX128X_MIN_OUTPUT_POWER )
 	{
-		output_params->chip_output_pwr_in_dbm_configured = -18;
-		output_params->chip_output_pwr_in_dbm_expected   = -18;
+		output_params->chip_output_pwr_in_dbm_configured = SX128X_MIN_OUTPUT_POWER;
+		output_params->chip_output_pwr_in_dbm_expected   = SX128X_MIN_OUTPUT_POWER;
 	}
 	else
 	{
@@ -53,11 +55,9 @@ void ral_sx128x_bsp_get_lora_cad_det_peak(const void *context, ral_lora_sf_t sf,
 	// Function used to fine tune the cad detection peak, update if needed
 }
 
-#define SX128X_MIN_OUTPUT_POWER -18
-#define SX128X_MAX_OUTPUT_POWER 13
+
 
 #define SX128X_CONVERT_TABLE_INDEX_OFFSET 18
-
 
 #define SX128X_LORA_RX_CONSUMPTION_BW_200_DCDC 5500
 #define SX128X_LORA_RX_BOOSTED_CONSUMPTION_BW_200_DCDC 6200
@@ -283,4 +283,48 @@ __weak ral_status_t ral_sx128x_bsp_get_instantaneous_lora_rx_power_consumption(
         return RAL_STATUS_UNKNOWN_VALUE;
     }
     }
+}
+
+void ral_sx128x_bsp_set_front_end_tx(const void* context)
+{
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	const struct device *dev = context;
+	struct sx128x_hal_context_data_t *data = dev->data;
+	if (data->fem_cbs.tx) {
+		data->fem_cbs.tx();
+	}
+#endif
+}
+
+void ral_sx128x_bsp_set_front_end_rx(const void* context)
+{
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	const struct device *dev = context;
+	struct sx128x_hal_context_data_t *data = dev->data;
+	if (data->fem_cbs.rx) {
+		data->fem_cbs.rx();
+	}
+#endif
+}
+
+void ral_sx128x_bsp_set_front_end_bypass(const void* context)
+{
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	const struct device *dev = context;
+	struct sx128x_hal_context_data_t *data = dev->data;
+	if (data->fem_cbs.bypass) {
+		data->fem_cbs.bypass();
+	}
+#endif
+}
+
+void ral_sx128x_bsp_set_front_end_off(const void* context)
+{
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	const struct device *dev = context;
+	struct sx128x_hal_context_data_t *data = dev->data;
+	if (data->fem_cbs.off) {
+		data->fem_cbs.off();
+	}
+#endif
 }
