@@ -86,6 +86,9 @@ struct sx126x_hal_context_data_t {
 #endif /* CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER */
 	sx126x_sleep_status_t radio_status;
 	uint8_t tx_offset; /* Board TX power offset at reset */
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	struct front_end_module_cbs_t fem_cbs;
+#endif /* CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE */
 };
 
 
