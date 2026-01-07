@@ -1,3 +1,12 @@
+Irnas v0.8.0
+============
+
+LoRa Basics Modem:
+* Add multi-radio support.
+
+Radio drivers:
+* Add multi-radio support.
+* 
 Irnas v0.7.0
 ============
 

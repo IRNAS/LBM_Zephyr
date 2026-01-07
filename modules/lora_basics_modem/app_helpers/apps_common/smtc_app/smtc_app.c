@@ -26,6 +26,9 @@
 
 LOG_MODULE_REGISTER(smtc_app, CONFIG_LORA_BASICS_MODEM_LOG_LEVEL);
 
+/* EvaTODO: For now add support only for single stack */
+#define SMTC_APP_STACK_ID 0
+
 /* Offset in second between GPS EPOCH and UNIX EPOCH time */
 #define OFFSET_BETWEEN_GPS_EPOCH_AND_UNIX_EPOCH 315964800
 
@@ -133,10 +136,10 @@ void smtc_app_init(const struct device *lora_radio, struct smtc_app_event_callba
 #endif
 	};
 
-	smtc_modem_hal_init(lora_radio);
+	smtc_modem_hal_init(SMTC_APP_STACK_ID, lora_radio);
 	smtc_modem_hal_register_callbacks(&prv_hal_cb);
 
-	smtc_modem_set_radio_context(lora_radio);
+	smtc_modem_set_radio_context(SMTC_APP_STACK_ID, lora_radio);
 	smtc_modem_init(&prv_event_process);
 }
 

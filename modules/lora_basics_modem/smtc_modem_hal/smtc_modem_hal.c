@@ -26,37 +26,47 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(smtc_modem_hal, CONFIG_LORA_BASICS_MODEM_LOG_LEVEL);
 
+/* Raise error if CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS is > 1 and LORA_BASICS_MODEM_CRYPTOGRAPHY_LR11XX is enabled - not supported yet! */
+#if (CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS > 1) && defined(CONFIG_LORA_BASICS_MODEM_CRYPTOGRAPHY_LR11XX)
+#error "LR11XX cryptography does not support multiple stacks. Please disable CONFIG_LORA_BASICS_MODEM_CRYPTOGRAPHY_LR11XX or set CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS to 1."
+#endif
+
+struct smtc_modem_hal_ctx {
+	/* transceiver device pointer */
+	const struct device *transceiver_dev;
+
+	/* context and callback for modem_hal_timer */
+	void *smtc_modem_hal_timer_context;
+	void (*smtc_modem_hal_timer_callback)(void *context);
+
+	/* flag for enabling/disabling timer interrupt. This is set by the library during "critical" sections */
+	bool modem_irq_enabled;
+	bool modem_irq_pending_while_disabled;
+	bool radio_irq_pending_while_disabled;
+
+	/* The timer and work used for the modem_hal_timer */
+	struct k_timer smtc_modem_hal_timer;
+
+	/* context and callback for the event pin interrupt */
+	void *smtc_modem_hal_radio_irq_context;
+	void (*smtc_modem_hal_radio_irq_callback)(void *context);
+#ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
+	void (*user_irq_callback)(void *context);
+#endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
+};
+
 /* ------------ Local context ------------ */
+static struct smtc_modem_hal_ctx prv_ctx[CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS];
+
+/* External callbacks - we do not need those per radio */
+struct smtc_modem_hal_cb *prv_hal_cb;
 
 /* A binary semaphore to notify the main LBM loop */
 K_SEM_DEFINE(prv_main_event_sem, 0, 1);
 
-/* transceiver device pointer */
-static const struct device *prv_transceiver_dev;
-
-/* External callbacks */
-static struct smtc_modem_hal_cb *prv_hal_cb;
-
-/* context and callback for modem_hal_timer */
-static void *prv_smtc_modem_hal_timer_context;
-static void (*prv_smtc_modem_hal_timer_callback)(void *context);
-
-/* flag for enabling/disabling timer interrupt. This is set by the libraray during "critical"
- * sections */
-static bool prv_modem_irq_enabled = true;
-static bool prv_modem_irq_pending_while_disabled = false;
-static bool prv_radio_irq_pending_while_disabled = false;
-
-/* The timer and work used for the modem_hal_timer */
+/* The work used for the modem_hal_timer */
 static void prv_smtc_modem_hal_timer_handler(struct k_timer *timer);
-K_TIMER_DEFINE(prv_smtc_modem_hal_timer, prv_smtc_modem_hal_timer_handler, NULL);
 
-/* context and callback for the event pin interrupt */
-static void *prv_smtc_modem_hal_radio_irq_context;
-static void (*prv_smtc_modem_hal_radio_irq_callback)(void *context);
-#ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
-static void (*prv_user_irq_callback)(void *context);
-#endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
 
 /* ------------ Initialization ------------
  *
@@ -64,10 +74,20 @@ static void (*prv_user_irq_callback)(void *context);
  * and is used to set everything up in here.
  */
 
-void smtc_modem_hal_init(const struct device *transceiver)
+void smtc_modem_hal_init(uint8_t stack_id, const struct device *transceiver)
 {
+	__ASSERT(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS, "Invalid stack ID");
 	__ASSERT(transceiver, "transceiver must be provided");
-	prv_transceiver_dev = transceiver;
+
+	prv_ctx[stack_id].transceiver_dev = transceiver;
+
+	/* Init interrupt flags */
+	prv_ctx[stack_id].modem_irq_enabled = true;
+	prv_ctx[stack_id].modem_irq_pending_while_disabled = false;
+	prv_ctx[stack_id].radio_irq_pending_while_disabled = false;
+
+	/* Init the timer and work used for the modem_hal_timer */
+	k_timer_init(&prv_ctx[stack_id].smtc_modem_hal_timer, prv_smtc_modem_hal_timer_handler, NULL);
 }
 
 void smtc_modem_hal_register_callbacks(struct smtc_modem_hal_cb *hal_cb)
@@ -150,49 +170,49 @@ void smtc_modem_hal_wake_up()
  */
 static void prv_smtc_modem_hal_timer_handler(struct k_timer *timer)
 {
-	ARG_UNUSED(timer);
+	struct smtc_modem_hal_ctx *ctx = CONTAINER_OF(timer, struct smtc_modem_hal_ctx, smtc_modem_hal_timer);
 
-	if (prv_modem_irq_enabled) {
-		prv_smtc_modem_hal_timer_callback(prv_smtc_modem_hal_timer_context);
+	if (ctx->modem_irq_enabled) {
+		ctx->smtc_modem_hal_timer_callback(ctx->smtc_modem_hal_timer_context);
 	} else {
-		prv_modem_irq_pending_while_disabled = true;
+		ctx->modem_irq_pending_while_disabled = true;
 	}
 };
 
-void smtc_modem_hal_start_timer(const uint32_t milliseconds, void (*callback)(void *context),
+void smtc_modem_hal_start_timer(uint8_t stack_id, const uint32_t milliseconds, void (*callback)(void *context),
 				void *context)
 {
-	prv_smtc_modem_hal_timer_callback = callback;
-	prv_smtc_modem_hal_timer_context = context;
+	prv_ctx[stack_id].smtc_modem_hal_timer_callback = callback;
+	prv_ctx[stack_id].smtc_modem_hal_timer_context = context;
 
 	/* start one-shot timer */
-	k_timer_start(&prv_smtc_modem_hal_timer, K_MSEC(milliseconds), K_NO_WAIT);
+	k_timer_start(&prv_ctx[stack_id].smtc_modem_hal_timer, K_MSEC(milliseconds), K_NO_WAIT);
 }
 
-void smtc_modem_hal_stop_timer(void)
+void smtc_modem_hal_stop_timer(uint8_t stack_id)
 {
-	k_timer_stop(&prv_smtc_modem_hal_timer);
+	k_timer_stop(&prv_ctx[stack_id].smtc_modem_hal_timer);
 }
 
 /* ------------ IRQ management ------------ */
 
-void smtc_modem_hal_disable_modem_irq(void)
+void smtc_modem_hal_disable_modem_irq(uint8_t stack_id)
 {
-	prv_modem_irq_enabled = false;
+	prv_ctx[stack_id].modem_irq_enabled = false;
 }
 
-void smtc_modem_hal_enable_modem_irq(void)
+void smtc_modem_hal_enable_modem_irq(uint8_t stack_id)
 {
-	prv_modem_irq_enabled = true;
-	lora_transceiver_board_enable_interrupt(prv_transceiver_dev);
+	prv_ctx[stack_id].modem_irq_enabled = true;
+	lora_transceiver_board_enable_interrupt(prv_ctx[stack_id].transceiver_dev);
 	// FIXME: pending timer IRQ should be called at reenable time?
-	if (prv_radio_irq_pending_while_disabled) {
-		prv_radio_irq_pending_while_disabled = false;
-		prv_smtc_modem_hal_radio_irq_callback(prv_smtc_modem_hal_radio_irq_context);
+	if (prv_ctx[stack_id].radio_irq_pending_while_disabled) {
+		prv_ctx[stack_id].radio_irq_pending_while_disabled = false;
+		prv_ctx[stack_id].smtc_modem_hal_radio_irq_callback(prv_ctx[stack_id].smtc_modem_hal_radio_irq_context);
 	}
-	if (prv_modem_irq_pending_while_disabled) {
-		prv_modem_irq_pending_while_disabled = false;
-		prv_smtc_modem_hal_timer_callback(prv_smtc_modem_hal_timer_context);
+	if (prv_ctx[stack_id].modem_irq_pending_while_disabled) {
+		prv_ctx[stack_id].modem_irq_pending_while_disabled = false;
+		prv_ctx[stack_id].smtc_modem_hal_timer_callback(prv_ctx[stack_id].smtc_modem_hal_timer_context);
 	}
 }
 
@@ -495,58 +515,64 @@ uint32_t smtc_modem_hal_get_random_nb_in_range(const uint32_t val_1, const uint3
  *
  * @param[in] dev The transceiver device.
  */
-void prv_transceiver_event_cb(const struct device *dev)
+static void prv_transceiver_event_cb(const struct device *dev)
 {
+	uint8_t stack_id = 0;
+	while(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS) {
+		if(prv_ctx[stack_id].transceiver_dev == dev) {
+			break;
+		}
+		stack_id++;
+	}
+	__ASSERT(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS, "Could not find stack for transceiver device");
+
 #ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
 	/* Call user-define cb first, even if disabled by the smtc modem */
-	if(prv_user_irq_callback) {
-		prv_user_irq_callback(prv_smtc_modem_hal_radio_irq_context);
+	if(prv_ctx[stack_id].user_irq_callback) {
+		prv_ctx[stack_id].user_irq_callback(prv_ctx[stack_id].smtc_modem_hal_radio_irq_context);
 	}
 #endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
-	if (prv_modem_irq_enabled) {
+	if (prv_ctx[stack_id].modem_irq_enabled) {
 		/* Due to the way the transceiver driver is implemented, this is called from the system workq. */
-		prv_smtc_modem_hal_radio_irq_callback(prv_smtc_modem_hal_radio_irq_context);
+		prv_ctx[stack_id].smtc_modem_hal_radio_irq_callback(prv_ctx[stack_id].smtc_modem_hal_radio_irq_context);
 	} else {
-		prv_radio_irq_pending_while_disabled = true;
+		prv_ctx[stack_id].radio_irq_pending_while_disabled = true;
 	}
 }
 
-void smtc_modem_hal_irq_config_radio_irq(void (*callback)(void *context), void *context)
+void smtc_modem_hal_irq_config_radio_irq(uint8_t stack_id, void (*callback)(void *context), void *context)
 {
 	/* save callback function and context */
-	prv_smtc_modem_hal_radio_irq_context = context;
-	prv_smtc_modem_hal_radio_irq_callback = callback;
+	prv_ctx[stack_id].smtc_modem_hal_radio_irq_context = context;
+	prv_ctx[stack_id].smtc_modem_hal_radio_irq_callback = callback;
 
 	/* enable callback via transceiver driver */
-	lora_transceiver_board_attach_interrupt(prv_transceiver_dev, prv_transceiver_event_cb);
-	lora_transceiver_board_enable_interrupt(prv_transceiver_dev);
+	lora_transceiver_board_attach_interrupt(prv_ctx[stack_id].transceiver_dev, prv_transceiver_event_cb);
+	lora_transceiver_board_enable_interrupt(prv_ctx[stack_id].transceiver_dev);
 }
 
 #ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
-void smtc_modem_hal_register_user_irq_callback(void (*user_irq_callback)(void *context))
+void smtc_modem_hal_register_user_irq_callback(uint8_t stack_id, void (*user_irq_callback)(void *context))
 {
+	__ASSERT(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS, "Invalid stack ID");
 	/* save user callback function */
-	prv_user_irq_callback = user_irq_callback;
+	prv_ctx[stack_id].user_irq_callback = user_irq_callback;
 }
 #endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
 
-void smtc_modem_hal_irq_reset_radio_irq(void)
+void smtc_modem_hal_irq_reset_radio_irq(uint8_t stack_id)
 {
-	lora_transceiver_board_disable_interrupt(prv_transceiver_dev);
-	lora_transceiver_board_attach_interrupt(prv_transceiver_dev, prv_transceiver_event_cb);
-	lora_transceiver_board_enable_interrupt(prv_transceiver_dev);
+	__ASSERT(stack_id < CONFIG_LORA_BASICS_MODEM_NUMBER_OF_STACKS, "Invalid stack ID");
+
+	lora_transceiver_board_disable_interrupt(prv_ctx[stack_id].transceiver_dev);
+	lora_transceiver_board_attach_interrupt(prv_ctx[stack_id].transceiver_dev, prv_transceiver_event_cb);
+	lora_transceiver_board_enable_interrupt(prv_ctx[stack_id].transceiver_dev);
 }
 
-void smtc_modem_hal_radio_irq_clear_pending(void)
+bool smtc_modem_external_stack_currently_use_radio( uint8_t stack_id )
 {
-	prv_modem_irq_pending_while_disabled = false;
-	prv_radio_irq_pending_while_disabled = false;
-}
-
-bool smtc_modem_external_stack_currently_use_radio( void )
-{
-    /* return false if the radio is available for the lbm stack  - except a very specific application, 
-     * this function should always return false. This function is used to check if the radio is use 
+    /* return false if the radio is available for the lbm stack  - except a very specific application,
+     * this function should always return false. This function is used to check if the radio is use
      * by an external stack - we should add implementation */
     return false;
 }
@@ -563,16 +589,16 @@ void smtc_modem_hal_stop_radio_tcxo(void)
 	 * empty. See 5.26 of the porting guide. */
 }
 
-uint32_t smtc_modem_hal_get_radio_tcxo_startup_delay_ms(void)
+uint32_t smtc_modem_hal_get_radio_tcxo_startup_delay_ms(uint8_t stack_id)
 {
 	/* From the porting guide:
 	 * If the TCXO is configured by the RAL BSP to start up automatically, then the value used
 	 * here should be the same as the startup delay used in the RAL BSP.
 	 */
-	return lora_transceiver_get_tcxo_startup_delay_ms(prv_transceiver_dev);
+	return lora_transceiver_get_tcxo_startup_delay_ms(prv_ctx[stack_id].transceiver_dev);
 }
 
-void smtc_modem_hal_set_ant_switch(bool is_tx_on)
+void smtc_modem_hal_set_ant_switch(uint8_t stack_id, bool is_tx_on)
 {
 	/* From the porting guide:
 	 * If no antenna switch is used then implement an empty command.
@@ -641,7 +667,7 @@ uint16_t smtc_modem_hal_get_voltage_mv(void)
 
 /* ------------ Misc ------------ */
 
-int8_t smtc_modem_hal_get_board_delay_ms(void)
+int8_t smtc_modem_hal_get_board_delay_ms(uint8_t stack_id)
 {
 	/* the wakeup time is probably closer to 0ms then 1ms,
 	 * but just to be safe: */

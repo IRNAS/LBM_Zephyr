@@ -25,6 +25,9 @@ zephyr_library_sources(
   ${LBM_SX126X_LIB_DIR}/sx126x_lr_fhss.c
 )
 
-# Used later
-set(LBM_RAL_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_sx126x.c)
-set(LBM_RALF_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_sx126x.c)
+if(CONFIG_LORA_BASICS_MODEM_DRIVERS_RAL_RALF)
+  zephyr_library_sources(
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_sx126x.c
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_sx126x.c
+  )
+endif()

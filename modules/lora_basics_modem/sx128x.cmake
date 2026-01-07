@@ -18,10 +18,12 @@ zephyr_library_sources(
   ${LBM_SX128X_LIB_DIR}/sx128x.c
 )
 
-# Used later
-set(LBM_RAL_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_sx128x.c)
-set(LBM_RALF_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_sx128x.c)
-
+if(CONFIG_LORA_BASICS_MODEM_DRIVERS_RAL_RALF)
+  zephyr_library_sources(
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_sx128x.c
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_sx128x.c
+  )
+endif()
 
 # FIXME: why this specification? - NOTE: Probably because there was an error in regions.cmake file that is now fixed?
 # LR1MAC_C_SOURCES += \

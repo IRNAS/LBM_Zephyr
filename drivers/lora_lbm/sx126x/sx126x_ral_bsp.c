@@ -122,20 +122,6 @@ void ral_sx126x_bsp_get_lora_cad_det_peak(const void *context, ral_lora_sf_t sf,
 	// Function used to fine tune the cad detection peak, update if needed
 }
 
-void radio_utilities_set_tx_power_offset(const void *context, uint8_t tx_pwr_offset_db)
-{
-	const struct device *dev = (const struct device *)context;
-	struct sx126x_hal_context_data_t *data = dev->data;
-	data->tx_offset = tx_pwr_offset_db;
-}
-
-uint8_t radio_utilities_get_tx_power_offset(const void *context)
-{
-	const struct device *dev = (const struct device *)context;
-	struct sx126x_hal_context_data_t *data = dev->data;
-	return data->tx_offset;
-}
-
 #define SX126X_LP_MIN_OUTPUT_POWER -17
 #define SX126X_LP_MAX_OUTPUT_POWER 15
 
