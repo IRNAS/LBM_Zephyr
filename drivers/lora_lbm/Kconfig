@@ -92,7 +92,8 @@ config LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
 	help
 	  Enable support for external front-end module (FEM) control in LoRa drivers.
 	  FEM will be automatically controlled during TX and RX operations if callbacks are provided.
-	  If enabled, correct power offset must be defined in board file, or set at runtime with
+	  If enabled, user needs to provide callbacks trough lora_transceiver_set_front_end_module_cbs().
+	  Correct power offset must be defined in board file, or set at runtime with
 	  radio_utilities_set_tx_power_offset() function.
 
 # TODO: LORA_SHELL

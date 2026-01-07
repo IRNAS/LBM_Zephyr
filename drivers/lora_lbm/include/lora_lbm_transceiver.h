@@ -19,10 +19,30 @@ extern "C" {
  */
 typedef void (*event_cb_t)(const struct device *dev);
 
+/**
+ * @brief Front-end module callbacks structure
+ *
+ */
 struct front_end_module_cbs_t {
+	/**
+	 * @brief Turn off the front-end module.
+	 *
+	 */
 	void (*off)(void);
+	/**
+	 * @brief Set the front-end module in bypass mode.
+	 *
+	 */
 	void (*bypass)(void);
+	/**
+	 * @brief Set the front-end module in receive mode.
+	 *
+	 */
 	void (*rx)(void);
+	/**
+	 * @brief Set the front-end module in transmit mode.
+	 *
+	 */
 	void (*tx)(void);
 };
 
