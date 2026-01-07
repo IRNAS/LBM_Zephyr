@@ -34,6 +34,9 @@ zephyr_library_sources(
   ${LBM_SX127X_LIB_DIR}/sx127x.c
 )
 
-# Used later
-set(LBM_RAL_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_sx127x.c)
-set(LBM_RALF_SOURCES ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_sx127x.c)
+if(CONFIG_LORA_BASICS_MODEM_DRIVERS_RAL_RALF)
+  zephyr_library_sources(
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ral/src/ral_sx127x.c
+    ${LBM_SMTC_MODEM_CORE_DIR}/smtc_ralf/src/ralf_sx127x.c
+  )
+endif()

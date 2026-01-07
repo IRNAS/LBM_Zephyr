@@ -49,7 +49,7 @@ static void sx128x_hal_check_device_ready(const void* context)
 	const struct sx128x_hal_context_cfg_t *config = dev->config;
 	struct sx128x_hal_context_data_t *data = dev->data;
 
-	if( data->radio_status != RADIO_SLEEP ) {
+	if( data->radio_status != SX128X_SLEEP ) {
 		sx128x_hal_wait_on_busy(context);
 	} else {
 		// Busy is HIGH in sleep mode, wake-up the device with a small glitch on NSS
@@ -59,7 +59,7 @@ static void sx128x_hal_check_device_ready(const void* context)
 		k_usleep(100);
 		gpio_pin_set_dt(cs, 0);
 		sx128x_hal_wait_on_busy(context);
-		data->radio_status = RADIO_AWAKE;
+		data->radio_status = SX128X_AWAKE;
 	}
 }
 
@@ -100,7 +100,7 @@ sx128x_hal_status_t sx128x_hal_write(const void* context,
 	// 0x84 - SX128x_SET_SLEEP opcode. In sleep mode the radio dio is struck to 1
 	// => do not test it
 	if(command[0] == 0x84) {
-		dev_data->radio_status = RADIO_SLEEP;
+		dev_data->radio_status = SX128X_SLEEP;
 		k_usleep(500);
 	} else {
 		sx128x_hal_check_device_ready(context);
@@ -162,7 +162,7 @@ sx128x_hal_status_t sx128x_hal_reset(const void* context)
 	gpio_pin_set_dt(nrst, 0);
 	k_msleep(5);
 
-	data->radio_status = RADIO_AWAKE;
+	data->radio_status = SX128X_AWAKE;
 	return SX128X_HAL_STATUS_OK;
 }
 

@@ -82,20 +82,6 @@ void ral_lr11xx_bsp_get_lfclk_cfg_in_sleep(const void* context, bool* lfclk_is_r
 #endif
 }
 
-void radio_utilities_set_tx_power_offset(const void *context, uint8_t tx_pwr_offset_db)
-{
-	const struct device *dev = (const struct device *)context;
-	struct lr11xx_hal_context_data_t *data = dev->data;
-	data->tx_offset = tx_pwr_offset_db;
-}
-
-uint8_t radio_utilities_get_tx_power_offset(const void *context)
-{
-	const struct device *dev = (const struct device *)context;
-	struct lr11xx_hal_context_data_t *data = dev->data;
-	return data->tx_offset;
-}
-
 // TODO: check values
 #define LR11XX_GFSK_RX_CONSUMPTION_DCDC 5400
 #define LR11XX_GFSK_RX_BOOSTED_CONSUMPTION_DCDC 7500

@@ -26,6 +26,8 @@
 #include <string.h>
 #include "smtc_modem_relay_api.h"
 
+#define STACK_ID 0
+
 /*!
  * @brief Stringify constants
  */
@@ -282,9 +284,9 @@ int                                main( void )
 #endif /* CONFIG_LORA_BASICS_MODEM_FUOTA */
 	};
 
-	smtc_modem_hal_init(transceiver);
-	smtc_modem_hal_register_callbacks(&prv_hal_cb);
-    smtc_modem_set_radio_context(transceiver);
+    smtc_modem_hal_init(STACK_ID, transceiver);
+    smtc_modem_hal_register_callbacks(&prv_hal_cb);
+    smtc_modem_set_radio_context(STACK_ID, transceiver);
 
     // Disable IRQ to avoid unwanted behavior during init
     hal_mcu_disable_irq( );

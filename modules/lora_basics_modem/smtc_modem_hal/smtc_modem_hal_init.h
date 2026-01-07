@@ -136,13 +136,14 @@ struct smtc_modem_hal_cb {
 };
 
 /**
- * @brief Initialization of the hal implementation.
+ * @brief Initialization of the hal implementation for the specific stack.
  *
- * This must be called before smtc_modem_init
+ * This must be called before smtc_modem_init for the specific stack.
  *
+ * @param[in] stack_id The stack ID for which the hal is initialized.
  * @param[in] transceiver The device pointer of the transceiver instance that will be used.
  */
-void smtc_modem_hal_init(const struct device *transceiver);
+void smtc_modem_hal_init(uint8_t stack_id, const struct device *transceiver);
 
 /**
  * @brief Register the applicative callbacks for the LoRaWAN stack.
@@ -157,14 +158,15 @@ void smtc_modem_hal_register_callbacks(struct smtc_modem_hal_cb *hal_cb);
 
 #ifdef CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB
 /**
- * @brief Register a user callback for the radio irq.
- * 
- * Callback will be called when radio irq is triggered in addition to the default smtc_modem 
+ * @brief Register a user callback for the radio irq for the specific stack.
+ *
+ * Callback will be called when radio irq is triggered in addition to the default smtc_modem
  * callbacks. smtc_modem_hal_disable_modem_irq has no effect on calling this callback.
- * 
- * @param[in] user_irq_callback 
+ *
+ * @param[in] stack_id The stack ID for which the user irq callback is registered.
+ * @param[in] user_irq_callback
  */
-void smtc_modem_hal_register_user_irq_callback(void (*user_irq_callback)(void *context));
+void smtc_modem_hal_register_user_irq_callback(uint8_t stack_id, void (*user_irq_callback)(void *context));
 #endif /* CONFIG_LORA_BASICS_MODEM_USER_IRQ_CB */
 
 /**
@@ -176,8 +178,9 @@ void smtc_modem_hal_register_user_irq_callback(void (*user_irq_callback)(void *c
  * this function must be called, before resuming usage of smtc modem by calling
  * smtc_modem_resume_after_user_radio_access(), otherwise event handling will not work.
  *
+ * @param[in] stack_id The stack ID for which the user irq callback is registered.
  */
-void smtc_modem_hal_irq_reset_radio_irq(void);
+void smtc_modem_hal_irq_reset_radio_irq(uint8_t stack_id);
 
 /**
  * @brief Interruptible sleep that will exit when radio events happen.

@@ -84,7 +84,7 @@ static void sx126x_work_cb(struct k_work *work)
 }
 #endif /* CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER_GLOBAL_THREAD */
 
-void lora_transceiver_board_attach_interrupt(const struct device *dev, event_cb_t cb)
+void sx126x_attach_interrupt(const struct device *dev, event_cb_t cb)
 {
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 	struct sx126x_hal_context_data_t *data = dev->data;
@@ -94,7 +94,7 @@ void lora_transceiver_board_attach_interrupt(const struct device *dev, event_cb_
 #endif // CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 }
 
-void lora_transceiver_board_enable_interrupt(const struct device *dev)
+void sx126x_enable_interrupt(const struct device *dev)
 {
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 	const struct sx126x_hal_context_cfg_t *config = dev->config;
@@ -112,7 +112,7 @@ void lora_transceiver_board_enable_interrupt(const struct device *dev)
 #endif // CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 }
 
-void lora_transceiver_board_disable_interrupt(const struct device *dev)
+void sx126x_disable_interrupt(const struct device *dev)
 {
 #ifdef CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 	const struct sx126x_hal_context_cfg_t *config = dev->config;
@@ -130,7 +130,7 @@ void lora_transceiver_board_disable_interrupt(const struct device *dev)
 #endif // CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER
 }
 
-uint32_t lora_transceiver_get_tcxo_startup_delay_ms(const struct device *dev)
+uint32_t sx126x_get_tcxo_startup_delay_ms(const struct device *dev)
 {
 	const struct sx126x_hal_context_cfg_t *config = dev->config;
 	return config->tcxo_cfg.wakeup_time_ms;
@@ -187,7 +187,7 @@ static int sx126x_init(const struct device *dev)
 	}
 
 	data->sx126x_dev = dev;
-	data->radio_status = RADIO_AWAKE;
+	data->radio_status = SX126X_AWAKE;
 	data->tx_offset = config->tx_offset;
 
 	// Event pin trigger config
@@ -301,6 +301,7 @@ static int sx126x_pm_action(const struct device *dev, enum pm_device_action acti
 
 #define SX126X_CONFIG(node_id)                                                \
 	{                                                                         \
+		.type = RADIO_HAL_CONTEXT_SX126X,                                   \
 		.spi = SPI_DT_SPEC_GET(node_id, SX126X_SPI_OPERATION, 0),             \
 		.reset = GPIO_DT_SPEC_GET(node_id, reset_gpios),                      \
 		.busy = GPIO_DT_SPEC_GET(node_id, busy_gpios),                        \
