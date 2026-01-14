@@ -65,6 +65,9 @@ struct sx128x_hal_context_data_t {
 #endif /* CONFIG_LORA_BASICS_MODEM_DRIVERS_EVENT_TRIGGER */
 	sx128x_sleep_status_t radio_status;
 	uint8_t tx_offset; /* Board TX power offset at reset */
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	struct front_end_module_cbs_t fem_cbs;
+#endif /* CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE */
 };
 
 // LoRa LBM Transceiver interface implementation
@@ -72,6 +75,7 @@ void sx128x_attach_interrupt(const struct device *dev, event_cb_t cb);
 void sx128x_enable_interrupt(const struct device *dev);
 void sx128x_disable_interrupt(const struct device *dev);
 uint32_t sx128x_get_tcxo_startup_delay_ms(const struct device *dev);
+void sx128x_set_front_end_module_cbs(const struct device *dev, struct front_end_module_cbs_t fem_cbs);
 
 #ifdef __cplusplus
 }

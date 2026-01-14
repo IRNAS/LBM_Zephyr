@@ -85,6 +85,17 @@ config LORA_BASICS_MODEM_DRIVERS_RAL_RALF
 	help
 	  Include the Radio Abstration Layer from the new LoRa Basics Modem stack
 
+config LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	bool "External Front-End Module support"
+	default n
+	depends on LORA_BASICS_MODEM_DRIVERS
+	help
+	  Enable support for external front-end module (FEM) control in LoRa drivers.
+	  FEM will be automatically controlled during TX and RX operations if callbacks are provided.
+	  If enabled, user needs to provide callbacks trough lora_transceiver_set_front_end_module_cbs().
+	  Correct power offset must be defined in board file, or set at runtime with
+	  radio_utilities_set_tx_power_offset() function.
+
 # TODO: LORA_SHELL
 
 endif # LORA_BASICS_MODEM_DRIVERS
