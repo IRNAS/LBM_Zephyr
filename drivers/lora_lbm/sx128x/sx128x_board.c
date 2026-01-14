@@ -137,6 +137,14 @@ uint32_t sx128x_get_tcxo_startup_delay_ms(const struct device *dev)
 	return 0;
 }
 
+void sx128x_set_front_end_module_cbs(const struct device *dev, struct front_end_module_cbs_t fem_cbs)
+{
+#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	struct sx128x_hal_context_data_t *data = dev->data;
+	data->fem_cbs = fem_cbs;
+#endif /* CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE */
+}
+
 static int sx128x_init(const struct device *dev)
 {
 	const struct sx128x_hal_context_cfg_t *config = dev->config;
