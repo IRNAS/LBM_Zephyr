@@ -17,6 +17,8 @@
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
 
+#include <flash_map_pm.h>
+
 #include <lora_lbm_transceiver.h>
 
 // for variadic args
@@ -267,9 +269,10 @@ bool smtc_modem_hal_crashlog_get_status(void)
 // Maybe split the flash in half, one with contexts and one with store-and-forward.
 // Maybe remove the store-and-forward circularfs backend and just use NVS.
 
-#if DT_HAS_CHOSEN(lora_basics_modem_context_partition)
-#define CONTEXT_PARTITION DT_FIXED_PARTITION_ID(DT_CHOSEN(lora_basics_modem_context_partition))
+#if FIXED_PARTITION_EXISTS(lora_basic_modem_context_partition)
+#define CONTEXT_PARTITION FIXED_PARTITION_ID(lora_basic_modem_context_partition)
 #else
+#error "No partition found for LBM context storage, using default storage_partition"
 #define CONTEXT_PARTITION FIXED_PARTITION_ID(storage_partition)
 #endif
 
