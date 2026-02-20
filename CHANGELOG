@@ -1,3 +1,10 @@
+Irnas v0.10.0
+============
+
+LoRa Basics Modem:
+* Add support for flash map.
+* Update user-provided storage support.
+
 Irnas v0.9.0
 ============
 
