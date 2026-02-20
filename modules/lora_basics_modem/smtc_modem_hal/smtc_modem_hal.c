@@ -17,6 +17,8 @@
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
 
+#include <flash_map_pm.h>
+
 #include <lora_lbm_transceiver.h>
 
 // for variadic args
@@ -238,24 +240,37 @@ void smtc_modem_hal_context_store(const modem_context_type_t ctx_type, uint32_t 
 void smtc_modem_hal_crashlog_store(const uint8_t *crashlog, uint8_t crash_string_length)
 {
 	/* We use 0xFF as the ID so we do not overwrite any of the valid contexts */
-	prv_hal_cb->context_store(CRASH_LOG_ID, crashlog, crash_string_length);
+	prv_hal_cb->context_store(CRASH_LOG_ID, 0, crashlog, crash_string_length);
 }
 
 void smtc_modem_hal_crashlog_restore(uint8_t *crashlog, uint8_t *crash_string_length)
 {
-	prv_hal_cb->context_restore(CRASH_LOG_ID, crashlog, crash_string_length);
+	/* As context_restore cb does not take pointer for length input, wee need to have a
+	 * workaround to make this work, so we read max possible length and extract actual length after */
+	prv_hal_cb->context_restore(CRASH_LOG_ID, 0, crashlog, CRASH_LOG_SIZE + 2);
+	if (crashlog[0] == 0 && crashlog[1] == 0) {
+		LOG_WRN("No crashlog stored");
+		*crash_string_length = 0;
+	} else {
+		*crash_string_length = crashlog[1];
+		memcpy(crashlog, crashlog + 2, *crash_string_length);
+		LOG_DBG("Restored crashlog of length %d", *crash_string_length);
+	}
+
 }
 
 void smtc_modem_hal_crashlog_set_status(bool available)
 {
-	prv_hal_cb->context_store(CRASH_LOG_STATUS_ID, (uint8_t *)&available, sizeof(available));
+	prv_hal_cb->context_store(CRASH_LOG_STATUS_ID, 0, (uint8_t *)&available, sizeof(available));
 }
 
 bool smtc_modem_hal_crashlog_get_status(void)
 {
-	bool available;
-	prv_hal_cb->context_restore(CRASH_LOG_STATUS_ID, (uint8_t *)&available, sizeof(available));
-	return available;
+	uint8_t status_buffer[1];
+	prv_hal_cb->context_restore(CRASH_LOG_STATUS_ID, 0, status_buffer, sizeof(status_buffer));
+	LOG_DBG("Got crashlog status: %d", status_buffer[0]);
+	// Any other state might mean uninitialized flash area
+	return (status_buffer[0] == 1);
 }
 
 #endif
@@ -267,9 +282,10 @@ bool smtc_modem_hal_crashlog_get_status(void)
 // Maybe split the flash in half, one with contexts and one with store-and-forward.
 // Maybe remove the store-and-forward circularfs backend and just use NVS.
 
-#if DT_HAS_CHOSEN(lora_basics_modem_context_partition)
-#define CONTEXT_PARTITION DT_FIXED_PARTITION_ID(DT_CHOSEN(lora_basics_modem_context_partition))
+#if FIXED_PARTITION_EXISTS(lora_basic_modem_context_partition)
+#define CONTEXT_PARTITION FIXED_PARTITION_ID(lora_basic_modem_context_partition)
 #else
+#error "No partition found for LBM context storage, using default storage_partition"
 #define CONTEXT_PARTITION FIXED_PARTITION_ID(storage_partition)
 #endif
 
@@ -294,8 +310,10 @@ static void flash_init(void)
 	LOG_INF("Opened flash area of size %d", context_flash_area->fa_size);
 }
 
-static uint32_t priv_hal_context_address(const modem_context_type_t ctx_type, uint32_t offset)
+static uint32_t priv_hal_context_address(const modem_context_type_t ctx_type, uint32_t offset, bool *supported)
 {
+	*supported = true;
+
 	switch( ctx_type )
 	{
 	case CONTEXT_MODEM:
@@ -305,7 +323,8 @@ static uint32_t priv_hal_context_address(const modem_context_type_t ctx_type, ui
 	case CONTEXT_LORAWAN_STACK:
 		return ADDR_LORAWAN_CONTEXT_OFFSET + offset;
 	case CONTEXT_FUOTA:
-		// no fuota example on stm32l0
+		*supported = false;
+		// Not supported
 		return 0;
 	case CONTEXT_STORE_AND_FORWARD:
 		return ADDR_STORE_AND_FORWARD_CONTEXT_OFFSET + offset;
@@ -321,10 +340,17 @@ void smtc_modem_hal_context_restore(const modem_context_type_t ctx_type, uint32_
 {
 	int rc;
 	uint32_t real_offset;
+	bool supported;
 
 	flash_init();
-	real_offset = priv_hal_context_address(ctx_type, offset);
+	real_offset = priv_hal_context_address(ctx_type, offset, &supported);
+	if (!supported) {
+		LOG_ERR("Context type %d not supported for restore", ctx_type);
+		return;
+	}
 	rc = flash_area_read(context_flash_area, real_offset, buffer, size);
+
+	LOG_DBG("Restored context type %d from offset %d, size %d", ctx_type, real_offset, size);
 	return;
 }
 
@@ -338,12 +364,17 @@ void smtc_modem_hal_context_store(const modem_context_type_t ctx_type, uint32_t 
 	int rc;
 	uint32_t real_offset;
 	uint32_t real_size;
+	bool supported;
 
 	// shitty workaround because some 4-bytes writes will come while flash supports only 8
 	real_size = size + 8 - (size % 8);
 
 	flash_init();
-	real_offset = priv_hal_context_address(ctx_type, offset);
+	real_offset = priv_hal_context_address(ctx_type, offset, &supported);
+	if (!supported) {
+		LOG_ERR("Context type %d not supported for store", ctx_type);
+		return;
+	}
 
 	// read-erase-write
 	if (real_offset < ADDR_STORE_AND_FORWARD_CONTEXT_OFFSET) {
@@ -361,6 +392,8 @@ void smtc_modem_hal_context_store(const modem_context_type_t ctx_type, uint32_t 
 		rc = flash_area_write(context_flash_area, real_offset, page_buffer, real_size);
 	}
 
+	LOG_DBG("Stored context type %d at offset %d, size %d, real size: %d", ctx_type, real_offset, size, real_size);
+
 	return;
 }
 
@@ -371,9 +404,14 @@ void smtc_modem_hal_context_flash_pages_erase(const modem_context_type_t ctx_typ
 {
 	int rc;
 	uint32_t real_offset;
+	bool supported;
 
 	flash_init();
-	real_offset = priv_hal_context_address(ctx_type, offset);
+	real_offset = priv_hal_context_address(ctx_type, offset, &supported);
+	if (!supported) {
+		LOG_ERR("Context type %d not supported for erase", ctx_type);
+		return;
+	}
 	rc = flash_area_erase(context_flash_area, real_offset, smtc_modem_hal_flash_get_page_size() * nb_page);
 	return;
 }
@@ -415,6 +453,7 @@ void smtc_modem_hal_crashlog_store(const uint8_t *crashlog, uint8_t crash_string
 	flash_area_erase(context_flash_area, ADDR_CRASHLOG_CONTEXT_OFFSET, 4096);
 	flash_area_write(context_flash_area, ADDR_CRASHLOG_CONTEXT_OFFSET, page_buffer, 4096);
 
+	LOG_DBG("Stored crashlog of length %d", crash_string_length);
 	// prv_store("smtc_modem_hal/crashlog", crashlog, crash_string_length);
 }
 
@@ -432,6 +471,7 @@ void smtc_modem_hal_crashlog_restore(uint8_t *crashlog, uint8_t *crash_string_le
 		memcpy(crashlog, page_buffer + 2, length);
 	}
 
+	LOG_DBG("Restored crashlog of length %d, it was available: %d", *crash_string_length, available);
 	// uint8_t length = strlen(crashlog_default);
 	// memcpy(crashlog, crashlog_default, length);
 	// *crash_string_length = length;
@@ -444,6 +484,8 @@ void smtc_modem_hal_crashlog_set_status(bool available)
 	if (!available) {
 		flash_area_erase(context_flash_area, ADDR_CRASHLOG_CONTEXT_OFFSET, smtc_modem_hal_flash_get_page_size());
 	}
+
+	LOG_DBG("Set crashlog status to %d", available);
 	// prv_store("smtc_modem_hal/crashlog_status", (uint8_t *)&available, sizeof(available));
 }
 
@@ -452,8 +494,10 @@ bool smtc_modem_hal_crashlog_get_status(void)
 	flash_init();
 	flash_area_read(context_flash_area, ADDR_CRASHLOG_CONTEXT_OFFSET, page_buffer, 1);
 
+	LOG_DBG("Got crashlog status: %d", page_buffer[0]);
 	// Any other state might mean uninitialized flash area
 	return (page_buffer[0] == 1);
+
 
 	// bool available;
 	// prv_load("smtc_modem_hal/crashlog_status", (uint8_t *)&available, sizeof(available));
