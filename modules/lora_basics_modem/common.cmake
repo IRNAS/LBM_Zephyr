@@ -358,6 +358,18 @@ zephyr_library_sources_ifdef(CONFIG_LORA_BASICS_MODEM_MULTICAST
 )
 
 #-----------------------------------------------------------------------------
+# Beacon RX
+#-----------------------------------------------------------------------------
+
+zephyr_compile_definitions_ifdef(CONFIG_LORA_BASICS_MODEM_BEACON_DISABLE_POWER_SAVING
+  BEACON_DISABLE_POWER_SAVING
+)
+
+zephyr_compile_definitions_ifdef(CONFIG_LORA_BASICS_MODEM_DEFAULT_LISTEN_BEACON_RATE
+  DEFAULT_LISTEN_BEACON_RATE=${CONFIG_LORA_BASICS_MODEM_DEFAULT_LISTEN_BEACON_RATE}
+)
+
+#-----------------------------------------------------------------------------
 # Misc
 #-----------------------------------------------------------------------------
 
