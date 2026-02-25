@@ -279,11 +279,25 @@ config LORA_BASICS_MODEM_STORE_AND_FORWARD
 # Relay and beacon options
 #-----------------------------------------------------------------------------
 
+# We need this option for time-sync with multiple stacks, otherwise beacons are dropped
+config LORA_BASICS_MODEM_BEACON_DISABLE_POWER_SAVING
+	bool "Disable power saving mode for beacon reception - listen to all beacons"
+	default n
+
+config LORA_BASICS_MODEM_DEFAULT_LISTEN_BEACON_RATE
+	int "Default listen beacon rate"
+	default 1
+	help
+	 Beacon implementation allows to not listen to all beacons to save power.
+	 The default_listen_beacon_rate parameter allows to down sample the beacon listening.
+	 For example, setting the value 4 means that the device will open 1 time a reception to
+	 receive the beacon and stay in mute 3 times to save power. Also note that the driver sets
+	 default_listen_beacon_rate as LORA_BASICS_MODEM_DEFAULT_LISTEN_BEACON_RATE * NUMBER_OF_STACKS.
+
 # TODO:
 config LORA_BASICS_MODEM_BEACON_TX
 	bool "Enable beacon transmission support"
 	default n
-
 
 config LORA_BASICS_MODEM_RELAY_RX
 	bool "Enable relay RX support (only supports crypto soft)"
