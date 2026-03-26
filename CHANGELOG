@@ -1,3 +1,10 @@
+Irnas v0.11.1
+============
+
+LoRa Basics Modem:
+* Fix log issue in lora basic modem lib.
+
+
 Irnas v0.11.0
 ============
 
