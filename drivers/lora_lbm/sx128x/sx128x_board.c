@@ -137,11 +137,21 @@ uint32_t sx128x_get_tcxo_startup_delay_ms(const struct device *dev)
 	return 0;
 }
 
-void sx128x_set_front_end_module_cbs(const struct device *dev, struct front_end_module_cbs_t fem_cbs)
+void sx128x_configure_front_end_module(const struct device *dev, struct front_end_module_cfg_t *fem_cfg)
 {
 #ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+
+	__ASSERT(fem_cfg, "FEM configuration cannot be NULL");
+	__ASSERT(fem_cfg->tx_pwr_threshold_dbm <= SX128X_PWR_MAX, "FEM TX power threshold cannot be higher than max radio output power");
+	__ASSERT(fem_cfg->tx_pwr_threshold_dbm >= SX128X_PWR_MIN, "FEM TX power threshold cannot be lower than min radio output power");
+	__ASSERT(fem_cfg->tx_max_pwr_dbm >= SX128X_PWR_MAX, "FEM max TX power cannot be lower than max radio output power");
+	__ASSERT(fem_cfg->gain_dbm > 0, "FEM gain must be positive");
+
+
 	struct sx128x_hal_context_data_t *data = dev->data;
-	data->fem_cbs = fem_cbs;
+	data->fem_cfg = fem_cfg;
+#else
+	LOG_WRN("External front-end module support not enabled!");
 #endif /* CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE */
 }
 

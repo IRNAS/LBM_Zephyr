@@ -47,6 +47,18 @@ struct front_end_module_cbs_t {
 };
 
 /**
+ * @brief Front-end module configuration structure
+ *
+ */
+struct front_end_module_cfg_t {
+	struct front_end_module_cbs_t cbs;
+	uint8_t tx_pwr_threshold_dbm; /* Threshold above which the FEM should be set to TX mode */
+	uint8_t tx_max_pwr_dbm;       /* Maximum output power of the FEM in dB */
+	uint8_t gain_dbm;             /* Gain provided by the FEM in dB */
+	bool active;                  /* Whether to use the FEM */
+};
+
+/**
  * @brief Attach interrupt cb to event pin.
  *
  * @param dev context
@@ -87,10 +99,10 @@ int32_t lora_transceiver_get_model(const struct device *dev);
  * @brief Set front-end module callbacks
  *
  * @param[in] dev context
- * @param[in] fem_cbs front-end module callbacks
+ * @param[in] fem_cfg front-end module configuration
  */
-void lora_transceiver_set_front_end_module_cbs(const struct device *dev,
-	struct front_end_module_cbs_t fem_cbs);
+void lora_transceiver_configure_front_end_module(const struct device *dev,
+	struct front_end_module_cfg_t *fem_cfg);
 
 #ifdef __cplusplus
 }
