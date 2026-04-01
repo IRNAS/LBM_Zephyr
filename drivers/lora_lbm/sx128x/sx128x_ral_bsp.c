@@ -25,28 +25,63 @@ void ral_sx128x_bsp_get_tx_cfg(const void* context,
 	const ral_sx128x_bsp_tx_cfg_input_params_t* input_params,
 	ral_sx128x_bsp_tx_cfg_output_params_t* output_params)
 {
-	// get board tx power offset
+	output_params->pa_ramp_time  = SX128X_RAMP_10_US;
+
+	// get board tx power offset and adjust input power accordingly
 	int8_t board_tx_pwr_offset_db = radio_utilities_get_tx_power_offset(context);
 
-	int16_t power = input_params->system_output_pwr_in_dbm - board_tx_pwr_offset_db;
+	int16_t power_expected = input_params->system_output_pwr_in_dbm - board_tx_pwr_offset_db;
 
-	if( power > SX128X_MAX_OUTPUT_POWER )
+	// Check if front-end module is available and configured and set power and mode accordingly
+#if CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
+	const struct device *dev = context;
+	struct sx128x_hal_context_data_t *data = dev->data;
+	if (data->fem_cfg->active) {
+		int16_t power_configured = power_expected;
+		// Check min power
+		if( power_expected < SX128X_MIN_OUTPUT_POWER)
+		{
+			output_params->chip_output_pwr_in_dbm_configured = SX128X_MIN_OUTPUT_POWER;
+			output_params->chip_output_pwr_in_dbm_expected   = SX128X_MIN_OUTPUT_POWER;
+			data->fem_tx_mode = false; /* Set in bypass mode */
+		}
+		// Check if under FEM threshold
+		else if( power_expected <= data->fem_cfg->tx_pwr_threshold_dbm )
+		{
+			output_params->chip_output_pwr_in_dbm_configured = power_expected;
+			output_params->chip_output_pwr_in_dbm_expected   = power_expected;
+			data->fem_tx_mode = false; /* Set in bypass mode */
+		}
+		// FEM TX mode
+		else {
+			// Check if over max configured value
+			if( power_expected > data->fem_cfg->tx_max_pwr_dbm )
+			{
+				power_expected = data->fem_cfg->tx_max_pwr_dbm;
+			}
+			// Calculate set power with FEM gain compensation
+			power_configured = power_expected - data->fem_cfg->gain_dbm;
+			data->fem_tx_mode = true; /* Set in TX mode */
+
+			output_params->chip_output_pwr_in_dbm_configured = power_configured;
+			output_params->chip_output_pwr_in_dbm_expected   = power_expected;
+		}
+
+		return;
+	}
+#endif /* CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE */
+
+
+	if( power_expected > SX128X_MAX_OUTPUT_POWER )
 	{
 		output_params->chip_output_pwr_in_dbm_configured = SX128X_MAX_OUTPUT_POWER;
 		output_params->chip_output_pwr_in_dbm_expected   = SX128X_MAX_OUTPUT_POWER;
 	}
-	else if( power < SX128X_MIN_OUTPUT_POWER )
+	else if( power_expected < SX128X_MIN_OUTPUT_POWER )
 	{
 		output_params->chip_output_pwr_in_dbm_configured = SX128X_MIN_OUTPUT_POWER;
 		output_params->chip_output_pwr_in_dbm_expected   = SX128X_MIN_OUTPUT_POWER;
 	}
-	else
-	{
-		output_params->chip_output_pwr_in_dbm_configured = ( int8_t ) power;
-		output_params->chip_output_pwr_in_dbm_expected   = ( int8_t ) power;
-	}
-
-	output_params->pa_ramp_time  = SX128X_RAMP_10_US;
 }
 
 void ral_sx128x_bsp_get_lora_cad_det_peak(const void *context, ral_lora_sf_t sf, ral_lora_bw_t bw,
@@ -290,8 +325,20 @@ void ral_sx128x_bsp_set_front_end_tx(const void* context)
 #ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
 	const struct device *dev = context;
 	struct sx128x_hal_context_data_t *data = dev->data;
-	if (data->fem_cbs.tx) {
-		data->fem_cbs.tx();
+	// Check if active
+	if(!data->fem_cfg->active) {
+		return;
+	}
+	// Determine whether to set FEM in TX mode or bypass mode based on configuration and expected output power
+	if(data->fem_tx_mode) {
+		if (data->fem_cfg->cbs.tx) {
+			data->fem_cfg->cbs.tx();
+		}
+	}
+	else {
+		if (data->fem_cfg->cbs.bypass) {
+			data->fem_cfg->cbs.bypass();
+		}
 	}
 #endif
 }
@@ -301,19 +348,12 @@ void ral_sx128x_bsp_set_front_end_rx(const void* context)
 #ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
 	const struct device *dev = context;
 	struct sx128x_hal_context_data_t *data = dev->data;
-	if (data->fem_cbs.rx) {
-		data->fem_cbs.rx();
+	// Check if active
+	if(!data->fem_cfg->active) {
+		return;
 	}
-#endif
-}
-
-void ral_sx128x_bsp_set_front_end_bypass(const void* context)
-{
-#ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
-	const struct device *dev = context;
-	struct sx128x_hal_context_data_t *data = dev->data;
-	if (data->fem_cbs.bypass) {
-		data->fem_cbs.bypass();
+	if (data->fem_cfg->cbs.rx) {
+		data->fem_cfg->cbs.rx();
 	}
 #endif
 }
@@ -323,8 +363,12 @@ void ral_sx128x_bsp_set_front_end_off(const void* context)
 #ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
 	const struct device *dev = context;
 	struct sx128x_hal_context_data_t *data = dev->data;
-	if (data->fem_cbs.off) {
-		data->fem_cbs.off();
+	// Check if active
+	if(!data->fem_cfg->active) {
+		return;
+	}
+	if (data->fem_cfg->cbs.off) {
+		data->fem_cfg->cbs.off();
 	}
 #endif
 }

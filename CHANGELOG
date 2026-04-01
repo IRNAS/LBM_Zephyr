@@ -1,3 +1,12 @@
+Irnas v0.12.0
+============
+
+LoRa Basics Modem:
+* Modify front-end odule support for SX128X
+
+Radio drivers:
+* Modify external front-end odule support for SX128X. Add configuration options.
+
 Irnas v0.11.1
 ============
 

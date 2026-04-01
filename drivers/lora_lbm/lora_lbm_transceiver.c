@@ -156,7 +156,7 @@ int32_t lora_transceiver_get_model(const struct device *dev)
 	return -1;
 }
 
-void lora_transceiver_set_front_end_module_cbs(const struct device *dev, struct front_end_module_cbs_t fem_cbs)
+void lora_transceiver_configure_front_end_module(const struct device *dev, struct front_end_module_cfg_t *fem_cfg)
 {
 #ifdef CONFIG_LORA_BASIC_MODEM_EXTERNAL_FRONT_END_MODULE
 	const radio_hal_context_type_t *context_type =
@@ -164,7 +164,7 @@ void lora_transceiver_set_front_end_module_cbs(const struct device *dev, struct 
 	switch (*context_type) {
 #ifdef CONFIG_SEMTECH_SX128X
 		case RADIO_HAL_CONTEXT_SX128X: {
-			sx128x_set_front_end_module_cbs(dev, fem_cbs);
+			sx128x_configure_front_end_module(dev, fem_cfg);
 			break;
 		}
 #endif /* CONFIG_SEMTECH_SX128X */
