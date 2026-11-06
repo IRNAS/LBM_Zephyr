@@ -408,6 +408,12 @@ else()
   zephyr_compile_definitions(MODEM_HAL_DEEP_DBG_TRACE=0)
 endif()
 
+if(${CONFIG_LORA_BASICS_MODEM_LOG_CHANNEL_MASK})
+  zephyr_compile_definitions(MODEM_HAL_DBG_TRACE_CHANNEL_MASK=1)
+else()
+  zephyr_compile_definitions(MODEM_HAL_DBG_TRACE_CHANNEL_MASK=0)
+endif()
+
 #-----------------------------------------------------------------------------
 # Common sources
 #-----------------------------------------------------------------------------

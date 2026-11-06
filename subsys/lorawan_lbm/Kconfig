@@ -50,6 +50,13 @@ config LORA_BASICS_MODEM_LOG_LEVEL_DEEP_DBG
 	help
 	 An even more verbose log level than debug
 
+config LORA_BASICS_MODEM_LOG_CHANNEL_MASK
+	bool "Per-channel TX mask dumps (requires LOG_LEVEL_DEEP_DBG=y)"
+	depends on LORA_BASICS_MODEM_LOG_LEVEL_DEEP_DBG
+	help
+	 Log the US915 TX channel mask on every join request, uplink and
+	 post-join mask change, one log line per channel (about 72 lines).
+
 # Taken from `make help` output and options.mk
 
 #-----------------------------------------------------------------------------
